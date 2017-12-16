@@ -33,7 +33,8 @@ namespace CryptoAnalysatorWebApp
             services.AddScoped<ExmoMarket>();
             services.AddScoped<BittrexMarket>();
             services.AddScoped<PoloniexMarket>();
-            services.AddScoped<PairsAnalysator>();
+            services.AddSingleton<PairsAnalysator>();
+            services.AddSingleton<TimeService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

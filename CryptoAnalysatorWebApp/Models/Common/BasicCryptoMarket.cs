@@ -3,26 +3,29 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using CryptoAnalysatorWebApp.Interfaces;
+using Newtonsoft.Json.Linq;
 
 namespace CryptoAnalysatorWebApp.Models.Common
 {
     public abstract class BasicCryptoMarket: ICryptoMarket {
         protected readonly string _basicUrl;
+        protected readonly string _orderBookCommand;
         protected List<ExchangePair> _pairs;
         protected List<ExchangePair> _usdtPairs;
         protected List<ExchangePair> _crossRates;
 
         public List<ExchangePair> Pairs { get => _pairs; }
-        public List<ExchangePair> СrossRates { get => _crossRates; }
+        public List<ExchangePair> Crosses { get => _crossRates; }
 
         protected readonly decimal _feeTaker;
         protected readonly decimal _feeMaker;
 
-        public BasicCryptoMarket(string url, string command, decimal feeTaker, decimal feeMaker) {
+        public BasicCryptoMarket(string url, string command, decimal feeTaker, decimal feeMaker, string orderBookCommand) {
             _pairs = new List<ExchangePair>();
             _usdtPairs = new List<ExchangePair>();
             _crossRates = new List<ExchangePair>();
             _basicUrl = url;
+            _orderBookCommand = orderBookCommand;
             _feeTaker = feeTaker;
             _feeMaker = feeMaker;
             LoadPairs(command);
@@ -31,10 +34,10 @@ namespace CryptoAnalysatorWebApp.Models.Common
         public void LoadPairs(string command) {
             _pairs.Clear();
             string response = GetResponse(_basicUrl + command);
-            ProcessResponse(response);
+            ProcessResponsePairs(response);
         }
 
-        protected abstract void ProcessResponse(string response);
+        protected abstract void ProcessResponsePairs(string response);
 
         protected void CheckAddUsdtPair(ExchangePair pair) {
             char[] signsSplit = { '-' };

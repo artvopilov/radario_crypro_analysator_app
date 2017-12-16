@@ -6,10 +6,11 @@ namespace CryptoAnalysatorWebApp.Models
 {
     public class PoloniexMarket : BasicCryptoMarket {
         public PoloniexMarket(string url = "https://poloniex.com/public?command=", string command = "returnTicker",
-            decimal feeTaker = (decimal)0.0025, decimal feeMaker = (decimal)0.0015) : base(url, command, feeTaker, feeMaker) {
+            decimal feeTaker = (decimal)0.0025, decimal feeMaker = (decimal)0.0015, string orderBookCommand = "returnOrderBook") : 
+            base(url, command, feeTaker, feeMaker, orderBookCommand) {
         }
 
-        protected override void ProcessResponse(string response) {
+        protected override void ProcessResponsePairs(string response) {
             var responseJSON = JObject.Parse(response);
 
             foreach (var pair in responseJSON) {
@@ -25,6 +26,20 @@ namespace CryptoAnalysatorWebApp.Models
 
             CreateCrossRates();
             Console.WriteLine("[INFO] PoloniexMarket is ready");
+        }
+
+        public decimal LoadOrder(string currencyPair, bool isSeller, int depth = 10) {
+            currencyPair = currencyPair.Replace('-', '_');
+            string query = _basicUrl + _orderBookCommand + $"&currencyPair={currencyPair}&depth={depth}";
+
+            string response = GetResponse(query);
+
+            JObject responseJson = JObject.Parse(response);
+            if (isSeller) {
+                return (decimal)responseJson["asks"][0][0] * (1 + _feeTaker);
+            } else {
+                return (decimal)responseJson["bids"][0][0] * (1 + _feeMaker);
+            }
         }
     }
 }

@@ -6,10 +6,11 @@ namespace CryptoAnalysatorWebApp.Models
 {
     public class BittrexMarket : BasicCryptoMarket {
         public BittrexMarket(string url = "https://bittrex.com/api/v1.1/public/", string command = "getmarketsummaries",
-            decimal feeTaker = (decimal)0.0025, decimal feeMaker = (decimal)0.0025) : base(url, command, feeTaker, feeMaker) {
+            decimal feeTaker = (decimal)0.0025, decimal feeMaker = (decimal)0.0025, string orderBookCommand = "getorderbook") 
+            : base(url, command, feeTaker, feeMaker, orderBookCommand) {
         }
 
-        protected override void ProcessResponse(string response) {
+        protected override void ProcessResponsePairs(string response) {
             var responseJSON = JObject.Parse(response)["result"];
 
             foreach (JObject pair in responseJSON) {
@@ -25,6 +26,19 @@ namespace CryptoAnalysatorWebApp.Models
 
             CreateCrossRates();
             Console.WriteLine("[INFO] BittrexMarket is ready");
+        }
+
+        public decimal LoadOrder(string currencyPair, bool isSeller) {
+            string query = _basicUrl + _orderBookCommand + $"?market={currencyPair}&type=both";
+            string response = GetResponse(query);
+
+            JToken responseJson = JObject.Parse(response)["result"];
+            if (isSeller) {
+                return (decimal)responseJson["sell"][0]["Rate"] * (1 + _feeTaker);
+            } else {
+                return (decimal)responseJson["buy"][0]["Rate"] * (1 - _feeMaker);
+            }
+
         }
     }
 }

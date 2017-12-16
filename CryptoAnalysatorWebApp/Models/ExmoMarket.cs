@@ -6,11 +6,12 @@ using CryptoAnalysatorWebApp.Interfaces;
 namespace CryptoAnalysatorWebApp.Models
 {
     public class ExmoMarket : BasicCryptoMarket {
-        public ExmoMarket(string url = "https://api.exmo.com/v1/", string command = "ticker",
-            decimal feeTaker = (decimal)0.002, decimal feeMaker = (decimal)0.002) : base(url, command, feeTaker, feeMaker) {
+        public ExmoMarket(string url = "https://api.exmo.me/v1/", string command = "ticker",
+            decimal feeTaker = (decimal)0.002, decimal feeMaker = (decimal)0.002, string orderBookCommand = "order_book") :
+            base(url, command, feeTaker, feeMaker, orderBookCommand) {
         }
 
-        protected override void ProcessResponse(string response) {
+        protected override void ProcessResponsePairs(string response) {
             var responseJSON = JObject.Parse(response);
 
             foreach (var pair in responseJSON) {
@@ -29,6 +30,19 @@ namespace CryptoAnalysatorWebApp.Models
 
             CreateCrossRates();
             Console.WriteLine("[INFO] ExmoMarket is ready");
+        }
+
+        public decimal LoadOrder(string currencyPair, bool isSeller) {
+            currencyPair = currencyPair.Substring(currencyPair.IndexOf('-') + 1) + '_' + currencyPair.Substring(0, currencyPair.IndexOf('-'));
+            string query = _basicUrl + _orderBookCommand + $"/?pair={currencyPair}";
+            string response = GetResponse(query);
+
+            JObject responseJson = JObject.Parse(response);
+            if (isSeller) {
+                return (decimal)responseJson[currencyPair]["ask_top"] * (1 + _feeTaker);
+            } else {
+                return (decimal)responseJson[currencyPair]["bid_top"] * (1 - _feeMaker);
+            }
         }
     }
 }
