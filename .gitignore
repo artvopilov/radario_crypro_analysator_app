@@ -4,6 +4,9 @@ CryptoAnalysatorWebApp/obj/
 CryptoAnalysatorWebApp/bin/
 CryptoAnalysatorWebApp/Properties/
 CryptoAnalysatorWebApp/wwwroot/.idea/
+CryptoAnalysatorWebApp/wwwroot/client/node_modules/
+CryptoAnalysatorWebApp/wwwroot/client/package-lock.json
+CryptoAnalysatorWebApp/wwwroot/client/.idea/
 
 
 
