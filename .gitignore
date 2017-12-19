@@ -3,6 +3,7 @@ packages
 CryptoAnalysatorWebApp/obj/
 CryptoAnalysatorWebApp/bin/
 CryptoAnalysatorWebApp/Properties/
-CryptoAnalysatorWebApp/wwwroot/
+CryptoAnalysatorWebApp/wwwroot/.idea/
+
 
 
