@@ -38,7 +38,7 @@ namespace CryptoAnalysatorWebApp.Controllers
             _pairsAnalysator.FindActualPairsAndCrossRates(marketsArray);
 
             Dictionary<string, List<ExchangePair>> pairsDic = new Dictionary<string, List<ExchangePair>>();
-            pairsDic["crosses"] = _pairsAnalysator.CrossPairs;//_bittrexMarket.Crosses; //_pairsAnalysator.CrossPairs;
+            pairsDic["crosses"] = _pairsAnalysator.CrossPairs;
             pairsDic["pairs"] = _pairsAnalysator.ActualPairs;
 
             _timeService.StoreTime(DateTime.Now.TimeOfDay);
@@ -46,7 +46,7 @@ namespace CryptoAnalysatorWebApp.Controllers
             return Ok(pairsDic);
         }
 
-        //GET api/actualpairs/btc-ltc&seller=poloniex&buyer=bittrex&isCross=0
+        //GET api/actualpairs/btc-ltc?seller=poloniex&buyer=bittrex&isCross=false
         [HttpGet("{curPair}")]
         [Produces("application/json")]
         public IActionResult Get(string curPair, [FromQuery]string seller, [FromQuery]string buyer, [FromQuery]bool isCross) {
@@ -118,7 +118,7 @@ namespace CryptoAnalysatorWebApp.Controllers
 
             if (pricesAreOk) {
                 resDic["result"] = "Ok";
-                resDic["time"] = $"{(DateTime.Now.TimeOfDay - _timeService.TimeUpdated).Seconds}";
+                resDic["time"] = $"{(DateTime.Now.TimeOfDay - _timeService.TimeUpdated).TotalSeconds}";
                 return Ok(resDic);
             } else {
                 resDic["result"] = "Not actual";

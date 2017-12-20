@@ -1,0 +1,77 @@
+* {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 100%;
+    vertical-align: baseline;
+}
+
+
+html {
+    height: 100%;
+}
+
+.pairsAndCrosses {
+    width: 80%;
+    background-color: bisque;
+    margin: 10px auto;
+    list-style: none;
+    border-top: 1px solid black;
+}
+
+.pairInfo {
+    color: red;
+    border-bottom: 1px solid black;
+    list-style: none;
+}
+
+.pairInfo li {
+    display: inline-block;
+    padding: 5px 2px;
+}
+
+.pairName {
+    width: 12%;
+}
+
+.buy {
+    width: 19%;
+}
+
+.sell {
+    width: 19%;
+}
+
+.spread {
+    width: 19%;
+}
+
+.special {
+    width: 12%;
+}
+
+.trackBtn {
+    width: 7%;
+    cursor: pointer;
+    margin-right: 5px;
+}
+
+.pairInfo .relevance {
+    width: 9%;
+}
+
+.header {
+    list-style: none;
+    width: 80%;
+    margin-left: 10%;
+    margin-top: 10px;
+}
+
+.header li {
+    display: inline-block;
+    padding: 5px 2px;
+}
+
+.header .relevance {
+    width: 16%;
+}
