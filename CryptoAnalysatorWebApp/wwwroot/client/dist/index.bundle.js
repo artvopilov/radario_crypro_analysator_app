@@ -19000,7 +19000,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 var React = __webpack_require__(3);
 var axios = __webpack_require__(17);
 
-var Header = __webpack_require__(56);
+var StatusBar = __webpack_require__(56);
 var ActualPairs = __webpack_require__(57);
 
 var App = function (_React$Component) {
@@ -19035,7 +19035,7 @@ var App = function (_React$Component) {
             return React.createElement(
                 'div',
                 { id: 'app' },
-                React.createElement(Header, null),
+                React.createElement(StatusBar, null),
                 React.createElement(ActualPairs, { data: this.state.pairs, areCrosses: false }),
                 React.createElement(ActualPairs, { data: this.state.crosses, areCrosses: true })
             );
@@ -19948,59 +19948,41 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 var React = __webpack_require__(3);
 
-var Header = function (_React$Component) {
-    _inherits(Header, _React$Component);
+var StatusBar = function (_React$Component) {
+    _inherits(StatusBar, _React$Component);
 
-    function Header(props) {
-        _classCallCheck(this, Header);
+    function StatusBar(props) {
+        _classCallCheck(this, StatusBar);
 
-        return _possibleConstructorReturn(this, (Header.__proto__ || Object.getPrototypeOf(Header)).call(this, props));
+        return _possibleConstructorReturn(this, (StatusBar.__proto__ || Object.getPrototypeOf(StatusBar)).call(this, props));
     }
 
-    _createClass(Header, [{
+    _createClass(StatusBar, [{
         key: "render",
         value: function render() {
             return React.createElement(
-                "ul",
-                { className: "header" },
+                "div",
+                { className: "bar" },
+                "Wanna some ",
                 React.createElement(
-                    "li",
-                    { className: "pairName" },
-                    "\u041F\u0430\u0440\u0430"
+                    "span",
+                    { className: "caption" },
+                    "MONEY?"
                 ),
+                " U re lucky to hv got ",
                 React.createElement(
-                    "li",
-                    { className: "buy" },
-                    "\u041F\u043E\u043A\u0443\u043F\u043A\u0430"
-                ),
-                React.createElement(
-                    "li",
-                    { className: "sell" },
-                    "\u041F\u0440\u043E\u0434\u0430\u0436\u0430"
-                ),
-                React.createElement(
-                    "li",
-                    { className: "spread" },
-                    "\u0421\u043F\u0440\u0435\u0434"
-                ),
-                React.createElement(
-                    "li",
-                    { className: "special" },
-                    "\u0421\u043F\u0435\u0446 \u043E\u0442\u043C\u0435\u0442\u043A\u0438"
-                ),
-                React.createElement(
-                    "li",
-                    { className: "relevance" },
-                    "\u0410\u043A\u0442\u0443\u0430\u043B\u044C\u043D\u043E\u0441\u0442\u044C"
+                    "span",
+                    { className: "caption" },
+                    "HERE"
                 )
             );
         }
     }]);
 
-    return Header;
+    return StatusBar;
 }(React.Component);
 
-module.exports = Header;
+module.exports = StatusBar;
 
 /***/ }),
 /* 57 */
@@ -20039,17 +20021,51 @@ var ActualPairs = function (_React$Component) {
             var _this2 = this;
 
             return React.createElement(
-                'ul',
+                'table',
                 { className: 'pairsAndCrosses' },
-                this.props.data.map(function (curPair) {
-                    return React.createElement(
-                        'li',
-                        null,
-                        React.createElement(PairInfo, { pair: curPair.pair, seller: curPair.stockExchangeSeller, buyer: curPair.stockExchangeBuyer,
+                React.createElement(
+                    'tr',
+                    null,
+                    React.createElement(
+                        'th',
+                        { className: 'pair' },
+                        '\u041F\u0430\u0440\u0430'
+                    ),
+                    React.createElement(
+                        'th',
+                        { className: 'buy' },
+                        '\u041F\u043E\u043A\u0443\u043F\u043A\u0430'
+                    ),
+                    React.createElement(
+                        'th',
+                        { className: 'sell' },
+                        '\u041F\u0440\u043E\u0434\u0430\u0436\u0430'
+                    ),
+                    React.createElement(
+                        'th',
+                        { className: 'spread' },
+                        '\u0421\u043F\u0440\u0435\u0434'
+                    ),
+                    React.createElement(
+                        'th',
+                        { className: 'special' },
+                        '\u0421\u043F\u0435\u0446 \u043E\u0442\u043C\u0435\u0442\u043A\u0438'
+                    ),
+                    React.createElement(
+                        'th',
+                        { className: 'relevance' },
+                        '\u0410\u043A\u0442\u0443\u0430\u043B\u044C\u043D\u043E\u0441\u0442\u044C'
+                    )
+                ),
+                React.createElement(
+                    'tbody',
+                    null,
+                    this.props.data.map(function (curPair) {
+                        return React.createElement(PairInfo, { pair: curPair.pair, seller: curPair.stockExchangeSeller, buyer: curPair.stockExchangeBuyer,
                             purchasePrice: curPair.purchasePrice, sellPrice: curPair.sellPrice, isCross: _this2.props.areCrosses,
-                            url: '/api/actualpairs/' + curPair.pair + '?seller=' + curPair.stockExchangeSeller.toLowerCase() + ('&buyer=' + curPair.stockExchangeBuyer.toLowerCase()) + ('&isCross=' + (_this2.props.areCrosses ? "true" : "false")) })
-                    );
-                })
+                            url: '/api/actualpairs/' + curPair.pair + '?seller=' + curPair.stockExchangeSeller.toLowerCase() + ('&buyer=' + curPair.stockExchangeBuyer.toLowerCase()) + ('&isCross=' + (_this2.props.areCrosses ? "true" : "false")) });
+                    })
+                )
             );
         }
     }]);
@@ -20714,10 +20730,14 @@ var PairInfo = function (_React$Component) {
 
     _createClass(PairInfo, [{
         key: 'updateRelevance',
-        value: function updateRelevance() {
+        value: function updateRelevance(e) {
             var _this2 = this;
 
+            e.preventDefault();
+            var btn = e.target;
+            btn.classList.add('loading');
             axios.get(this.props.url).then(function (response) {
+                btn.classList.remove('loading');
                 var respData = response.data;
                 var relevance = respData.result === "Ok" ? respData.time : respData.result;
                 _this2.setState({ relevance: relevance });
@@ -20726,42 +20746,46 @@ var PairInfo = function (_React$Component) {
     }, {
         key: 'render',
         value: function render() {
+            var _this3 = this;
+
             return React.createElement(
-                'ul',
-                { className: 'pairInfo' },
+                'tr',
+                null,
                 React.createElement(
-                    'li',
-                    { className: 'pairName' },
+                    'td',
+                    { className: 'pair' },
                     this.props.pair
                 ),
                 React.createElement(
-                    'li',
+                    'td',
                     { className: 'buy' },
                     this.props.seller + ':  ' + this.props.purchasePrice
                 ),
                 React.createElement(
-                    'li',
+                    'td',
                     { className: 'sell' },
                     this.props.buyer + ':  ' + this.props.sellPrice
                 ),
                 React.createElement(
-                    'li',
+                    'td',
                     { className: 'spread' },
                     parseFloat(this.props.sellPrice) - parseFloat(this.props.purchasePrice)
                 ),
                 React.createElement(
-                    'li',
+                    'td',
                     { className: 'special' },
                     this.props.isCross ? "Cross" : ""
                 ),
                 React.createElement(
-                    'button',
-                    { className: 'trackBtn', onClick: this.updateRelevance.bind(this) },
-                    'Track'
-                ),
-                React.createElement(
-                    'li',
+                    'td',
                     { className: 'relevance' },
+                    React.createElement(
+                        'button',
+                        { className: 'trackBtn', 'data-label': 'Track', onClick: function onClick(e) {
+                                return _this3.updateRelevance.bind(_this3)(e);
+                            } },
+                        'Track'
+                    ),
                     this.state.relevance
                 )
             );

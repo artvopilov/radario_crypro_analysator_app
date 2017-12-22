@@ -1,7 +1,7 @@
 const React = require('react');
 const axios = require('axios');
 
-const Header = require('./Header');
+const StatusBar = require('./StatusBar');
 const ActualPairs = require('./ActualPairs');
 
 class App extends React.Component {
@@ -27,7 +27,7 @@ class App extends React.Component {
     render() {
         return (
             <div id="app">
-                <Header/>
+                <StatusBar/>
                 <ActualPairs data={this.state.pairs} areCrosses={false}/>
                 <ActualPairs data={this.state.crosses} areCrosses={true}/>
             </div>

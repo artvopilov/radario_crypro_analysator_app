@@ -11,67 +11,145 @@ html {
     height: 100%;
 }
 
+.bar {
+    margin-top: 20px;
+    width: 100%;
+    text-align: center;
+    color: white;
+    background-color: #424242;
+    padding: 8px;
+    font-family: Comic Sans MS;
+}
+
+.bar .caption {
+    font-size: 40px;
+}
+
 .pairsAndCrosses {
     width: 80%;
-    background-color: bisque;
-    margin: 10px auto;
-    list-style: none;
-    border-top: 1px solid black;
+    margin: 15px auto;
+    border-radius: 3px;
+    border-collapse: collapse;
 }
 
-.pairInfo {
-    color: red;
-    border-bottom: 1px solid black;
-    list-style: none;
+.pairsAndCrosses td {
+    padding: 4px 7px;
 }
 
-.pairInfo li {
-    display: inline-block;
-    padding: 5px 2px;
+.pairsAndCrosses th {
+    font-family: Arial;
+    text-align: left;
+    padding: 4px 7px;
+    background-color: #CED8F6;
 }
 
-.pairName {
-    width: 12%;
+.pairsAndCrosses th {
+    font-family: Times;
 }
 
-.buy {
-    width: 19%;
+.pairsAndCrosses tr:nth-child(even) {
+    background-color: #f2f2f2;
 }
 
-.sell {
-    width: 19%;
+.pairsAndCrosses .pair {
+    width: 11%;
+
 }
 
-.spread {
-    width: 19%;
+.pairsAndCrosses .buy {
+    width: 18%;
+
 }
 
-.special {
-    width: 12%;
+.pairsAndCrosses .sell {
+    width: 18%;
+
+}
+
+.pairsAndCrosses .spread {
+    width: 20%;
+
+}
+
+.pairsAndCrosses .special {
+    width: 11%;
+
+}
+
+.pairsAndCrosses .relevance {
+    width: 18%;
+
 }
 
 .trackBtn {
-    width: 7%;
-    cursor: pointer;
-    margin-right: 5px;
+    position:relative;
+    border:0;
+    margin-right: 12px;
+    padding:0;
+    cursor:pointer;
+    color:rgba(0,0,0,0);
+    background:transparent;
+    border-radius:.25rem;
+    -webkit-tap-highlight-color: rgba(0,0,0,0);
+    -webkit-touch-callout: none;
 }
 
-.pairInfo .relevance {
-    width: 9%;
+.trackBtn,
+.trackBtn:after,
+.trackBtn:before {
+    padding: 2px 8px;
+    -webkit-transition:-webkit-transform 0.75s,background-color .125s;
+    -moz-transition:-moz-transform 0.75s,background-color .125s;
+    -ms-transition:-ms-transform 0.75s,background-color .125s;
+    transition:transform 0.75s,background-color .125s;
+    -webkit-transform-style:preserve-3d;
+    -moz-transform-style:preserve-3d;
+    -ms-transform-style:preserve-3d;
+    transform-style:preserve-3d;
 }
 
-.header {
-    list-style: none;
-    width: 80%;
-    margin-left: 10%;
-    margin-top: 10px;
+.trackBtn:after,
+.trackBtn:before {
+    position:absolute;
+    top:0;
+    bottom:0;
+    left:0;
+    right:0;
+    border-radius:.25rem;
+    -webkit-backface-visibility:hidden;
+    -moz-backface-visibility:hidden;
+    -ms-backface-visibility:hidden;
+    backface-visibility:hidden;
+
 }
 
-.header li {
-    display: inline-block;
-    padding: 5px 2px;
+.trackBtn:before {
+    z-index:2;
+    color:#fff;
+    background-color: #82FA58;
+    content:attr(data-label);
 }
 
-.header .relevance {
-    width: 16%;
+.trackBtn:after {
+    z-index:1;
+    background-color:#999;
+    background-repeat:no-repeat;
+    background-position:center center;
+    background-image:url(data:image/gif;base64,R0lGODlhEAAQAPIAAJmZmf///7CwsOPj4////9fX18rKysPDwyH+GkNyZWF0ZWQgd2l0aCBhamF4bG9hZC5pbmZvACH5BAAKAAAAIf8LTkVUU0NBUEUyLjADAQAAACwAAAAAEAAQAAADMwi63P4wyklrE2MIOggZnAdOmGYJRbExwroUmcG2LmDEwnHQLVsYOd2mBzkYDAdKa+dIAAAh+QQACgABACwAAAAAEAAQAAADNAi63P5OjCEgG4QMu7DmikRxQlFUYDEZIGBMRVsaqHwctXXf7WEYB4Ag1xjihkMZsiUkKhIAIfkEAAoAAgAsAAAAABAAEAAAAzYIujIjK8pByJDMlFYvBoVjHA70GU7xSUJhmKtwHPAKzLO9HMaoKwJZ7Rf8AYPDDzKpZBqfvwQAIfkEAAoAAwAsAAAAABAAEAAAAzMIumIlK8oyhpHsnFZfhYumCYUhDAQxRIdhHBGqRoKw0R8DYlJd8z0fMDgsGo/IpHI5TAAAIfkEAAoABAAsAAAAABAAEAAAAzIIunInK0rnZBTwGPNMgQwmdsNgXGJUlIWEuR5oWUIpz8pAEAMe6TwfwyYsGo/IpFKSAAAh+QQACgAFACwAAAAAEAAQAAADMwi6IMKQORfjdOe82p4wGccc4CEuQradylesojEMBgsUc2G7sDX3lQGBMLAJibufbSlKAAAh+QQACgAGACwAAAAAEAAQAAADMgi63P7wCRHZnFVdmgHu2nFwlWCI3WGc3TSWhUFGxTAUkGCbtgENBMJAEJsxgMLWzpEAACH5BAAKAAcALAAAAAAQABAAAAMyCLrc/jDKSatlQtScKdceCAjDII7HcQ4EMTCpyrCuUBjCYRgHVtqlAiB1YhiCnlsRkAAAOwAAAAAAAAAAAA==);
+    -webkit-transform:rotateX(180deg);
+    -moz-transform:rotateX(180deg);
+    -ms-transform:rotateX(180deg);
+    transform:rotateX(180deg);
+    content:'';
+}
+
+.trackBtn:active:before {
+    background-color: #82FA58;
+}
+
+.trackBtn.loading {
+    -webkit-transform:rotateX(180deg);
+    -moz-transform:rotateX(180deg);
+    -ms-transform:rotateX(180deg);
+    transform:rotateX(180deg);
 }

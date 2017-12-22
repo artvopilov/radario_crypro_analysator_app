@@ -12,26 +12,30 @@ class PairInfo extends React.Component {
         }
     }
 
-    updateRelevance() {
+    updateRelevance(e) {
+        e.preventDefault();
+        const btn = e.target;
+        btn.classList.add('loading');
         axios.get(this.props.url)
             .then(response => {
+                btn.classList.remove('loading');
                 const respData = response.data;
                 const relevance =  respData.result === "Ok" ? respData.time : respData.result;
                 this.setState({relevance});
+
             });
     }
 
     render() {
         return (
-            <ul className="pairInfo">
-                <li className="pairName">{this.props.pair}</li>
-                <li className="buy">{`${this.props.seller}:  ${this.props.purchasePrice}`}</li>
-                <li className="sell">{`${this.props.buyer}:  ${this.props.sellPrice}`}</li>
-                <li className="spread">{parseFloat(this.props.sellPrice) - parseFloat(this.props.purchasePrice)}</li>
-                <li className="special">{this.props.isCross ? "Cross" : ""}</li>
-                <button className="trackBtn" onClick={this.updateRelevance.bind(this)}>Track</button>
-                <li className="relevance">{this.state.relevance}</li>
-            </ul>
+            <tr>
+                <td className="pair">{this.props.pair}</td>
+                <td className="buy">{`${this.props.seller}:  ${this.props.purchasePrice}`}</td>
+                <td className="sell">{`${this.props.buyer}:  ${this.props.sellPrice}`}</td>
+                <td className="spread">{parseFloat(this.props.sellPrice) - parseFloat(this.props.purchasePrice)}</td>
+                <td className="special">{this.props.isCross ? "Cross" : ""}</td>
+                <td className="relevance"><button className="trackBtn" data-label="Track" onClick={e => this.updateRelevance.bind(this)(e)}>Track</button>{this.state.relevance}</td>
+            </tr>
         )
     }
 }
