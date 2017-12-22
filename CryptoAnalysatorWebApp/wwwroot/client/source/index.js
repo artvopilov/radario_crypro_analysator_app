@@ -7,5 +7,5 @@ import '../public/styles/main.css'
 
 ReactDom.render(
     <App/>,
-    document.getElementById('app')
+    document.getElementById('main')
 );

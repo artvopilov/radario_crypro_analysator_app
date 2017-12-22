@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using CryptoAnalysatorWebApp.Models;
 using CryptoAnalysatorWebApp.Models.Common;
 using CryptoAnalysatorWebApp.Interfaces;
+using React.AspNet;
 
 
 namespace CryptoAnalysatorWebApp
@@ -35,6 +36,9 @@ namespace CryptoAnalysatorWebApp
             services.AddScoped<PoloniexMarket>();
             services.AddSingleton<PairsAnalysator>();
             services.AddSingleton<TimeService>();
+
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            services.AddReact();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -47,8 +51,7 @@ namespace CryptoAnalysatorWebApp
 
             app.UseMvc();
 
-            app.UseDefaultFiles();
-            app.UseStaticFiles();
+            app.UseFileServer(enableDirectoryBrowsing: true);
 
             app.Run(async (context) => {
                 await context.Response.WriteAsync("Incorrect route!");
