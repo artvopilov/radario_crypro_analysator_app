@@ -23,7 +23,6 @@ namespace CryptoAnalysatorWebApp
             } else {
                 port = 5000;
             }
-            Console.WriteLine(port);
             return WebHost.CreateDefaultBuilder(args)
                 .UseStartup<Startup>()
                 .UseKestrel(options => {
