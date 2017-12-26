@@ -23,7 +23,7 @@ class ActualPairs extends React.Component {
                 <tbody>
                     {this.props.data.map(curPair => {
                         return (
-                            <PairInfo pair={curPair.pair} seller={curPair.stockExchangeSeller} buyer={curPair.stockExchangeBuyer}
+                            <PairInfo pair={curPair.pair} seller={curPair.stockExchangeSeller} buyer={curPair.stockExchangeBuyer} spread={curPair.spread}
                                       purchasePrice={curPair.purchasePrice} sellPrice={curPair.sellPrice} isCross={this.props.areCrosses}
                                       url={`/api/actualpairs/${curPair.pair}?seller=${curPair.stockExchangeSeller.toLowerCase()}` +
                                     `&buyer=${curPair.stockExchangeBuyer.toLowerCase()}` +

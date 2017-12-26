@@ -38,8 +38,8 @@ namespace CryptoAnalysatorWebApp.Controllers
             _pairsAnalysator.FindActualPairsAndCrossRates(marketsArray);
 
             Dictionary<string, List<ExchangePair>> pairsDic = new Dictionary<string, List<ExchangePair>>();
-            pairsDic["crosses"] = _pairsAnalysator.CrossPairs;
-            pairsDic["pairs"] = _pairsAnalysator.ActualPairs;
+            pairsDic["crosses"] = _pairsAnalysator.CrossPairs.OrderByDescending(p => p.Spread).ToList();
+            pairsDic["pairs"] = _pairsAnalysator.ActualPairs.OrderByDescending(p => p.Spread).ToList();
 
             _timeService.StoreTime(DateTime.Now.TimeOfDay);
 

@@ -32,8 +32,8 @@ class PairInfo extends React.Component {
                 <td className="pair">{this.props.pair}</td>
                 <td className="buy">{`${this.props.seller}:  ${this.props.purchasePrice}`}</td>
                 <td className="sell">{`${this.props.buyer}:  ${this.props.sellPrice}`}</td>
-                <td className="spread">{parseFloat(this.props.sellPrice) - parseFloat(this.props.purchasePrice)}</td>
-                <td className="special">{this.props.isCross ? "Cross" : ""}</td>
+                <td className="spread">{parseFloat(this.props.spread)}%</td>
+                <td className="special">{this.props.isCross ? "Cross" : ""} {this.props.spread > 3 ? "chance" : ""}</td>
                 <td className="relevance"><button className="trackBtn" data-label="Track" onClick={e => this.updateRelevance.bind(this)(e)}>Track</button>{this.state.relevance}</td>
             </tr>
         )

@@ -96,6 +96,7 @@ namespace CryptoAnalysatorWebApp.Models
                 actualPair.SellPrice = maxSellPricePair.SellPrice;
                 actualPair.StockExchangeBuyer = maxSellPricePair.StockExchangeSeller;
                 actualPair.StockExchangeSeller = minPurchasePricePair.StockExchangeSeller;
+                actualPair.Spread = Math.Round((actualPair.SellPrice - actualPair.PurchasePrice) / actualPair.PurchasePrice * 100, 4);
 
                 return actualPair;
             } else {

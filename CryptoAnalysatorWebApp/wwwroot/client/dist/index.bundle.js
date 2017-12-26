@@ -20061,7 +20061,7 @@ var ActualPairs = function (_React$Component) {
                     'tbody',
                     null,
                     this.props.data.map(function (curPair) {
-                        return React.createElement(PairInfo, { pair: curPair.pair, seller: curPair.stockExchangeSeller, buyer: curPair.stockExchangeBuyer,
+                        return React.createElement(PairInfo, { pair: curPair.pair, seller: curPair.stockExchangeSeller, buyer: curPair.stockExchangeBuyer, spread: curPair.spread,
                             purchasePrice: curPair.purchasePrice, sellPrice: curPair.sellPrice, isCross: _this2.props.areCrosses,
                             url: '/api/actualpairs/' + curPair.pair + '?seller=' + curPair.stockExchangeSeller.toLowerCase() + ('&buyer=' + curPair.stockExchangeBuyer.toLowerCase()) + ('&isCross=' + (_this2.props.areCrosses ? "true" : "false")) });
                     })
@@ -20769,12 +20769,15 @@ var PairInfo = function (_React$Component) {
                 React.createElement(
                     'td',
                     { className: 'spread' },
-                    parseFloat(this.props.sellPrice) - parseFloat(this.props.purchasePrice)
+                    parseFloat(this.props.spread),
+                    '%'
                 ),
                 React.createElement(
                     'td',
                     { className: 'special' },
-                    this.props.isCross ? "Cross" : ""
+                    this.props.isCross ? "Cross" : "",
+                    ' ',
+                    this.props.spread > 3 ? "chance" : ""
                 ),
                 React.createElement(
                     'td',

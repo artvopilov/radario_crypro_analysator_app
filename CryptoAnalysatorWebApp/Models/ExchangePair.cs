@@ -11,5 +11,6 @@ namespace CryptoAnalysatorWebApp.Models
         public string StockExchangeBuyer { get; set; }
         public decimal PurchasePrice { get; set; }
         public decimal SellPrice { get; set; }
+        public decimal Spread { get; set; }
     }
 }
