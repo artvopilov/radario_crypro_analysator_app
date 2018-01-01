@@ -20861,10 +20861,7 @@ var Tools = function (_React$Component) {
 
             return React.createElement(
                 'form',
-                { id: 'tools', onSubmit: function onSubmit(event) {
-
-                        _this2.props.updatePairs();
-                    } },
+                { id: 'tools', onSubmit: this.props.updatePairs },
                 React.createElement(
                     'label',
                     null,
@@ -20873,6 +20870,7 @@ var Tools = function (_React$Component) {
                 React.createElement('input', { type: 'text', onChange: function onChange(event) {
                         return _this2.props.onChangeFilter(event);
                     } }),
+                '%',
                 React.createElement(
                     'button',
                     null,
