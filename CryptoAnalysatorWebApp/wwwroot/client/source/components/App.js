@@ -3,6 +3,7 @@ const axios = require('axios');
 
 const StatusBar = require('./StatusBar');
 const ActualPairs = require('./ActualPairs');
+const Tools = require('./Tools');
 
 class App extends React.Component {
     constructor(props) {
@@ -10,26 +11,39 @@ class App extends React.Component {
 
         this.state = {
             crosses: [],
-            pairs: []
+            pairs: [],
+            filter: 0
         };
     }
 
 
     componentDidMount() {
-        axios.get('/api/actualpairs')
+        this.updatePairs();
+    }
+
+    updatePairs() {
+        axios.get('/api/actualpairs/')
             .then((response) => {
                 const pairs = response.data.pairs;
                 const crosses = response.data.crosses;
+
                 this.setState({pairs, crosses});
             });
+    }
+
+    onChangeFilter(event) {
+        this.setState({
+            filter: event.target.value
+        })
     }
 
     render() {
         return (
             <div id="app">
                 <StatusBar/>
-                <ActualPairs data={this.state.pairs} areCrosses={false}/>
-                <ActualPairs data={this.state.crosses} areCrosses={true}/>
+                <Tools onChangeFilter={this.onChangeFilter.bind(this)} updatePairs={this.updatePairs.bind(this)}/>
+                <ActualPairs data={this.state.pairs} areCrosses={false} filter={this.state.filter}/>
+                <ActualPairs data={this.state.crosses} areCrosses={true} filter={this.state.filter}/>
             </div>
         )
     }

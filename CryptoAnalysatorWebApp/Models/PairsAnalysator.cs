@@ -21,9 +21,9 @@ namespace CryptoAnalysatorWebApp.Models
             _crossRates.Clear();
             for (int i = 0; i < marketsArray.Length - 1; i++) {
                 foreach (ExchangePair thatMarketPair in marketsArray[i].Pairs) {
-                    ExchangePair crossRate = AnalysePairs(thatMarketPair, marketsArray, i);
-                    if (crossRate != null) {
-                        _actualPairs.Add(crossRate);
+                    ExchangePair pair = AnalysePairs(thatMarketPair, marketsArray, i);
+                    if (pair != null) {
+                        _actualPairs.Add(pair);
                     }
                 }
 
@@ -96,7 +96,8 @@ namespace CryptoAnalysatorWebApp.Models
                 actualPair.SellPrice = maxSellPricePair.SellPrice;
                 actualPair.StockExchangeBuyer = maxSellPricePair.StockExchangeSeller;
                 actualPair.StockExchangeSeller = minPurchasePricePair.StockExchangeSeller;
-                actualPair.Spread = Math.Round((actualPair.SellPrice - actualPair.PurchasePrice) / actualPair.PurchasePrice * 100, 4);
+                //Костыль с делением
+                actualPair.Spread = Math.Round((actualPair.SellPrice - actualPair.PurchasePrice) / (actualPair.PurchasePrice > 0 ? actualPair.PurchasePrice : 1)  * 100, 4);
 
                 return actualPair;
             } else {

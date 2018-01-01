@@ -31,7 +31,7 @@ namespace CryptoAnalysatorWebApp.Models
         public decimal LoadOrder(string currencyPair, bool isSeller) {
             string query = _basicUrl + _orderBookCommand + $"?market={currencyPair}&type=both";
             string response = GetResponse(query);
-
+                
             JToken responseJson = JObject.Parse(response)["result"];
             if (isSeller) {
                 return (decimal)responseJson["sell"][0]["Rate"] * (1 + _feeTaker);

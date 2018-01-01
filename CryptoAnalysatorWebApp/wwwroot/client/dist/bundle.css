@@ -25,6 +25,10 @@ html {
     font-size: 40px;
 }
 
+#tools {
+    display: inline-block;
+}
+
 .pairsAndCrosses {
     width: 80%;
     margin: 15px auto;

@@ -8,7 +8,7 @@ class ActualPairs extends React.Component {
     constructor(props) {
         super(props);
     }
-// пара - покупка - продажа - спред - специальные отметки
+
     render() {
         return (
             <table className="pairsAndCrosses">
@@ -21,7 +21,9 @@ class ActualPairs extends React.Component {
                     <th className="relevance">Актуальность</th>
                 </tr>
                 <tbody>
-                    {this.props.data.map(curPair => {
+                    {this.props.data.filter(curPair => {
+                        return curPair.spread >= this.props.filter
+                    }).map(curPair => {
                         return (
                             <PairInfo pair={curPair.pair} seller={curPair.stockExchangeSeller} buyer={curPair.stockExchangeBuyer} spread={curPair.spread}
                                       purchasePrice={curPair.purchasePrice} sellPrice={curPair.sellPrice} isCross={this.props.areCrosses}
@@ -38,7 +40,8 @@ class ActualPairs extends React.Component {
 
 ActualPairs.proptypes = {
     data: PropTypes.array,
-    areCrosses: PropTypes.bool
+    areCrosses: PropTypes.bool,
+    filter: PropTypes.number
 };
 
 

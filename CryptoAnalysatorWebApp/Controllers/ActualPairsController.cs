@@ -12,8 +12,7 @@ using Newtonsoft.Json.Linq;
 namespace CryptoAnalysatorWebApp.Controllers
 {
     [Route("api/[controller]")]
-    public class ActualPairsController : Controller
-    {
+    public class ActualPairsController : Controller {
         private ExmoMarket _exmoMarket;
         private PoloniexMarket _poloniexMarket;
         private BittrexMarket _bittrexMarket;
@@ -31,8 +30,7 @@ namespace CryptoAnalysatorWebApp.Controllers
         // GET api/actualpairs
         [HttpGet]
         [Produces("application/json")]
-        public IActionResult Get()
-        {
+        public IActionResult Get() {
             BasicCryptoMarket[] marketsArray = { _poloniexMarket, _bittrexMarket, _exmoMarket };
 
             _pairsAnalysator.FindActualPairsAndCrossRates(marketsArray);
@@ -41,7 +39,7 @@ namespace CryptoAnalysatorWebApp.Controllers
             pairsDic["crosses"] = _pairsAnalysator.CrossPairs.OrderByDescending(p => p.Spread).ToList();
             pairsDic["pairs"] = _pairsAnalysator.ActualPairs.OrderByDescending(p => p.Spread).ToList();
 
-            _timeService.StoreTime(DateTime.Now.TimeOfDay);
+            _timeService.StoreTime(DateTime.Now.TimeOfDay, pairsDic["pairs"].ToList(), pairsDic["crosses"].ToList());
 
             return Ok(pairsDic);
         }
@@ -86,7 +84,7 @@ namespace CryptoAnalysatorWebApp.Controllers
                     case "poloniex":
                         resPurchasePrice = _poloniexMarket.LoadOrder($"USDT-{curPair.ToUpper().Substring(curPair.IndexOf('-') + 1)}", true) /
                             _poloniexMarket.LoadOrder($"USDT-{curPair.ToUpper().Substring(0, curPair.IndexOf('-'))}", false);
-                            ;
+                        ;
                         break;
                     case "bittrex":
                         resPurchasePrice = _bittrexMarket.LoadOrder($"USDT-{curPair.ToUpper().Substring(curPair.IndexOf('-') + 1)}", true) /
@@ -113,12 +111,23 @@ namespace CryptoAnalysatorWebApp.Controllers
                 }
             }
 
+            if (!isCross) {
+
+            }
+
             bool pricesAreOk = resSellPrice >= exchangePair.SellPrice && resPurchasePrice <= exchangePair.PurchasePrice ? true : false;
             Dictionary<string, string> resDic = new Dictionary<string, string>();
 
             if (pricesAreOk) {
                 resDic["result"] = "Ok";
-                resDic["time"] = $"{(DateTime.Now.TimeOfDay - _timeService.TimeUpdated).TotalSeconds}";
+                if (!isCross) {
+                    foreach (ExchangePair p in _timeService.TimePairs.Keys) {
+                        Console.WriteLine(p.Pair);
+                    }
+                    resDic["time"] = $"{(DateTime.Now.TimeOfDay - _timeService.GetPairTimeUpd(exchangePair)).TotalSeconds}";
+                } else {
+                    resDic["time"] = $"{(DateTime.Now.TimeOfDay - _timeService.GetCrossTimeUpd(exchangePair)).TotalSeconds}";
+                }
                 return Ok(resDic);
             } else {
                 resDic["result"] = "Not actual";
