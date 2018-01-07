@@ -20058,7 +20058,7 @@ var ActualPairs = function (_React$Component) {
                     React.createElement(
                         'th',
                         { className: 'spread' },
-                        '\u0421\u043F\u0440\u0435\u0434'
+                        '\u041F\u0440\u043E\u0444\u0438\u0442'
                     ),
                     React.createElement(
                         'th',

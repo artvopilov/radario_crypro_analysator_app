@@ -25,11 +25,18 @@ namespace CryptoAnalysatorWebApp.Controllers
         public TelegramBotClient Post([FromBody]Update update) {
             Message message = update.Message;
 
+            bool ok = false;
+
             foreach (CommonCommand command in _commands) {
                 if (message.Text.Contains('/' + command.Name)) {
                     command.Execute(message, _client);
+                    ok = true;
                     break;
                 }
+            }
+
+            if (!ok) {
+                _client.SendTextMessageAsync(message.Chat.Id, "Check your command");
             }
 
             return _client;

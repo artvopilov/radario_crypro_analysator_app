@@ -20,7 +20,7 @@ namespace CryptoAnalysatorWebApp.TelegramBot.Commands
             var chatId = message.Chat.Id;
             var messageId = message.MessageId;
 
-            string numStr = message.Text.Split(' ')[1];
+            string numStr = message.Text.Split(' ').Length > 1 ? message.Text.Split(' ')[1] : "0";
             int numWanted = int.TryParse(numStr, out numWanted) ? numWanted : 0;
 
             if (numWanted > 0) {
@@ -28,6 +28,8 @@ namespace CryptoAnalysatorWebApp.TelegramBot.Commands
                 string botMess = ProcessResponse(responseStr, numWanted);
 
                 client.SendTextMessageAsync(chatId, botMess);
+            } else {
+                client.SendTextMessageAsync(chatId, "Smth wrong");
             }
 
                   
@@ -52,8 +54,8 @@ namespace CryptoAnalysatorWebApp.TelegramBot.Commands
             int count = 0;
             int pairsAmount = responseJson.Count;
             while (count < pairsAmount && count < numWanted) {
-                botMess += $"{count + 1}){responseJson[count]["pair"]} $buy$<: {responseJson[count]["stockExchangeSeller"]}({responseJson[count]["purchasePrice"]}) " +
-                    $"$sell$: {responseJson[count]["stockExchangeBuyer"]}({responseJson[count]["sellPrice"]})\n";
+                botMess += $"{count + 1}){responseJson[count]["pair"]} buy<: {responseJson[count]["stockExchangeSeller"]}({responseJson[count]["purchasePrice"]}) " +
+                    $"sell: {responseJson[count]["stockExchangeBuyer"]}({responseJson[count]["sellPrice"]})\n";
                 count++;
             }
 

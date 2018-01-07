@@ -29,6 +29,8 @@ namespace CryptoAnalysatorWebApp.TelegramBot.Commands
                 string botMess = ProcessResponse(responseStr, numWanted);
 
                 client.SendTextMessageAsync(chatId, botMess);
+            } else {
+                client.SendTextMessageAsync(chatId, "Smth wrong");
             }
         }
 
@@ -44,15 +46,15 @@ namespace CryptoAnalysatorWebApp.TelegramBot.Commands
         }
 
         private string ProcessResponse(string responseStr, int numWanted) {
-            string botMess = "";
+            string botMess = "Crosses\n";
 
             JArray responseJson = (JArray)JObject.Parse(responseStr)["crosses"];
 
             int count = 0;
             int pairsAmount = responseJson.Count;
             while (count < pairsAmount && count < numWanted) {
-                botMess += $"{count + 1}){responseJson[count]["pair"]} $buy$: {responseJson[count]["stockExchangeSeller"]}({responseJson[count]["purchasePrice"]}) " +
-                    $"$sell$: {responseJson[count]["stockExchangeBuyer"]}({responseJson[count]["sellPrice"]})\n";
+                botMess += $"{count + 1}){responseJson[count]["pair"]} buy: {responseJson[count]["stockExchangeSeller"]}({responseJson[count]["purchasePrice"]}) " +
+                    $"sell: {responseJson[count]["stockExchangeBuyer"]}({responseJson[count]["sellPrice"]})\n";
                 count++;
             }
 

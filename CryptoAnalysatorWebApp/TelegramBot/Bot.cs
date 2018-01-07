@@ -32,7 +32,7 @@ namespace CryptoAnalysatorWebApp.TelegramBot
             _commands.Add(new GetTopCrossesCommand(port));
 
             _client = new TelegramBotClient(BotSettings.AccessToken);
-            _client.SetWebhookAsync("https://d6ce0ee2.ngrok.io/api/telegrambot").Wait();
+            _client.SetWebhookAsync("https://f7918dd3.ngrok.io/api/telegrambot").Wait();
 
             return _client;
         }

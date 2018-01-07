@@ -16,7 +16,7 @@ class ActualPairs extends React.Component {
                     <th className="pair">Пара</th>
                     <th className="buy">Покупка</th>
                     <th className="sell">Продажа</th>
-                    <th className="spread">Спред</th>
+                    <th className="spread">Профит</th>
                     <th className="special">Спец отметки</th>
                     <th className="relevance">Актуальность</th>
                 </tr>
