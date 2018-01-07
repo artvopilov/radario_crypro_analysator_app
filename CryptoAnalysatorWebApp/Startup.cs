@@ -13,6 +13,7 @@ using CryptoAnalysatorWebApp.Models;
 using CryptoAnalysatorWebApp.Models.Common;
 using CryptoAnalysatorWebApp.Interfaces;
 using React.AspNet;
+using CryptoAnalysatorWebApp.TelegramBot;
 
 
 namespace CryptoAnalysatorWebApp
@@ -37,6 +38,8 @@ namespace CryptoAnalysatorWebApp
             services.AddSingleton<PairsAnalysator>();
             services.AddSingleton<TimeService>();
 
+            Bot.Get();
+
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddReact();
         }
@@ -49,7 +52,12 @@ namespace CryptoAnalysatorWebApp
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseMvc();
+            app.UseMvc(routes =>
+            {
+                routes.MapRoute(
+                    name: "default",
+                    template: "{controller=TelegramBot}");
+            });
 
             app.UseFileServer(enableDirectoryBrowsing: true);
 

@@ -8,7 +8,11 @@ using CryptoAnalysatorWebApp.Models.Common;
 using CryptoAnalysatorWebApp.Models;
 using CryptoAnalysatorWebApp.Interfaces;
 using Newtonsoft.Json.Linq;
-
+using Telegram.Bot;
+using Telegram.Bot.Types;
+using CryptoAnalysatorWebApp.TelegramBot;
+using CryptoAnalysatorWebApp.TelegramBot.Commands;
+    
 namespace CryptoAnalysatorWebApp.Controllers
 {
     [Route("api/[controller]")]
