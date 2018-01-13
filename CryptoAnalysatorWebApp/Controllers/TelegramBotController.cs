@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using CryptoAnalysatorWebApp.TelegramBot;
-using CryptoAnalysatorWebApp.TelegramBot.Commands;
+using CryptoAnalysatorWebApp.TelegramBot.Commands.Common;
 
 namespace CryptoAnalysatorWebApp.Controllers
 {
@@ -23,10 +23,15 @@ namespace CryptoAnalysatorWebApp.Controllers
         // POST api/telegrambot
         [HttpPost]
         public TelegramBotClient Post([FromBody]Update update) {
-            Message message = update.Message;
+            Message message = update.Message ?? update.EditedMessage;
+
+            if (message == null) {
+                message = update.ChannelPost;
+                _commands.Where(cmnd => cmnd.Name == "check_censor").First().Execute(message, _client);
+                return _client;
+            }
 
             bool ok = false;
-
             foreach (CommonCommand command in _commands) {
                 if (message.Text.Contains('/' + command.Name)) {
                     command.Execute(message, _client);
@@ -38,9 +43,7 @@ namespace CryptoAnalysatorWebApp.Controllers
             if (!ok) {
                 _client.SendTextMessageAsync(message.Chat.Id, "Check your command");
             }
-
             return _client;
-
         }
     }
 }

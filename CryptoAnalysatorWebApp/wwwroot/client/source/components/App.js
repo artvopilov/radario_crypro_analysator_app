@@ -18,7 +18,7 @@ class App extends React.Component {
 
 
     componentDidMount() {
-        this.updatePairs();
+        this.updatePairs(); 
     }
 
     updatePairs() {

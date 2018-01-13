@@ -36,9 +36,9 @@ namespace CryptoAnalysatorWebApp
             services.AddScoped<BittrexMarket>();
             services.AddScoped<PoloniexMarket>();
             services.AddSingleton<PairsAnalysator>();
-            services.AddSingleton<TimeService>();
 
             Bot.Get();
+            Bot.StartChannelPosting();
 
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddReact();

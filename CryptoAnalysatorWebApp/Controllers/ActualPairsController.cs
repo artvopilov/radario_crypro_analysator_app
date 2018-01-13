@@ -21,21 +21,20 @@ namespace CryptoAnalysatorWebApp.Controllers
         private PoloniexMarket _poloniexMarket;
         private BittrexMarket _bittrexMarket;
         private PairsAnalysator _pairsAnalysator;
-        private TimeService _timeService;
 
-        public ActualPairsController(ExmoMarket exmoMarket, PoloniexMarket poloniexMarket, BittrexMarket bittrexMarket, PairsAnalysator pairsAnalysator, TimeService timeService) {
+        public ActualPairsController(ExmoMarket exmoMarket, PoloniexMarket poloniexMarket, BittrexMarket bittrexMarket, PairsAnalysator pairsAnalysator) {
             _exmoMarket = exmoMarket;
             _poloniexMarket = poloniexMarket;
             _bittrexMarket = bittrexMarket;
             _pairsAnalysator = pairsAnalysator;
-            _timeService = timeService;
         }
 
         // GET api/actualpairs
         [HttpGet]
         [Produces("application/json")]
         public IActionResult Get() {
-            BasicCryptoMarket[] marketsArray = { _poloniexMarket, _bittrexMarket, _exmoMarket };
+
+            BasicCryptoMarket[] marketsArray = { _poloniexMarket, _bittrexMarket , _exmoMarket };
 
             _pairsAnalysator.FindActualPairsAndCrossRates(marketsArray);
 
@@ -43,7 +42,7 @@ namespace CryptoAnalysatorWebApp.Controllers
             pairsDic["crosses"] = _pairsAnalysator.CrossPairs.OrderByDescending(p => p.Spread).ToList();
             pairsDic["pairs"] = _pairsAnalysator.ActualPairs.OrderByDescending(p => p.Spread).ToList();
 
-            _timeService.StoreTime(DateTime.Now.TimeOfDay, pairsDic["pairs"].ToList(), pairsDic["crosses"].ToList());
+            TimeService.StoreTime(DateTime.Now, pairsDic["pairs"].ToList(), pairsDic["crosses"].ToList());
 
             return Ok(pairsDic);
         }
@@ -84,54 +83,59 @@ namespace CryptoAnalysatorWebApp.Controllers
                 }
             } else {
                 exchangePair = _pairsAnalysator.CrossPairs.Find(pair => pair.Pair == curPair.ToUpper());
+                string[] devidedPairs = curPair.Split('-');
                 switch (seller) {
                     case "poloniex":
-                        resPurchasePrice = _poloniexMarket.LoadOrder($"USDT-{curPair.ToUpper().Substring(curPair.IndexOf('-') + 1)}", true) /
-                            _poloniexMarket.LoadOrder($"USDT-{curPair.ToUpper().Substring(0, curPair.IndexOf('-'))}", false);
+                        resPurchasePrice = _poloniexMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[2]}", true) /
+                            _poloniexMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[0]}", false);
                         ;
                         break;
                     case "bittrex":
-                        resPurchasePrice = _bittrexMarket.LoadOrder($"USDT-{curPair.ToUpper().Substring(curPair.IndexOf('-') + 1)}", true) /
-                            _bittrexMarket.LoadOrder($"USDT-{curPair.ToUpper().Substring(0, curPair.IndexOf('-'))}", false);
+                        resPurchasePrice = _bittrexMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[2]}", true) /
+                            _poloniexMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[0]}", false);
                         break;
                     case "exmo":
-                        resPurchasePrice = _exmoMarket.LoadOrder($"USDT-{curPair.ToUpper().Substring(curPair.IndexOf('-') + 1)}", true) /
-                            _exmoMarket.LoadOrder($"USDT-{curPair.ToUpper().Substring(0, curPair.IndexOf('-'))}", false);
+                        resPurchasePrice = _exmoMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[2]}", true) /
+                            _poloniexMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[0]}", false);
                         break;
                 }
                 switch (buyer) {
                     case "poloniex":
-                        resSellPrice = _poloniexMarket.LoadOrder($"USDT-{curPair.ToUpper().Substring(curPair.IndexOf('-') + 1)}", false) /
-                            _poloniexMarket.LoadOrder($"USDT-{curPair.ToUpper().Substring(0, curPair.IndexOf('-'))}", true);
+                        resSellPrice = _poloniexMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[2]}", false) /
+                            _poloniexMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[0]}", true);
                         break;
                     case "bittrex":
-                        resSellPrice = _bittrexMarket.LoadOrder($"USDT-{curPair.ToUpper().Substring(curPair.IndexOf('-') + 1)}", false) /
-                            _bittrexMarket.LoadOrder($"USDT-{curPair.ToUpper().Substring(0, curPair.IndexOf('-'))}", true);
+                        resSellPrice = _bittrexMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[2]}", false) /
+                            _poloniexMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[0]}", true);
                         break;
                     case "exmo":
-                        resSellPrice = _exmoMarket.LoadOrder($"USDT-{curPair.ToUpper().Substring(curPair.IndexOf('-') + 1)}", false) /
-                            _exmoMarket.LoadOrder($"USDT-{curPair.ToUpper().Substring(0, curPair.IndexOf('-'))}", true);
+                        resSellPrice = _exmoMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[2]}", false) /
+                            _poloniexMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[0]}", true);
                         break;
                 }
             }
 
-            if (!isCross) {
+            Dictionary<string, string> resDic = new Dictionary<string, string>();
 
+            if (exchangePair == null) {
+                resDic["result"] = "Not actual";
+                resDic["purchasePrice"] = $"{resPurchasePrice}";
+                resDic["sellPrice"] = $"{resSellPrice}";
+                return Ok(resDic);
             }
 
-            bool pricesAreOk = resSellPrice >= exchangePair.SellPrice && resPurchasePrice <= exchangePair.PurchasePrice ? true : false;
-            Dictionary<string, string> resDic = new Dictionary<string, string>();
+            bool pricesAreOk = true; // ((resSellPrice  >= exchangePair.SellPrice) && (resPurchasePrice <= exchangePair.PurchasePrice)) ? true : false;
 
             if (pricesAreOk) {
                 resDic["result"] = "Ok";
                 if (!isCross) {
-                    foreach (ExchangePair p in _timeService.TimePairs.Keys) {
-                        Console.WriteLine(p.Pair);
-                    }
-                    resDic["time"] = $"{(DateTime.Now.TimeOfDay - _timeService.GetPairTimeUpd(exchangePair)).TotalSeconds}";
+                    resDic["time"] = $"{(DateTime.Now.TimeOfDay - TimeService.GetPairTimeUpd(exchangePair).TimeOfDay).TotalSeconds}";
                 } else {
-                    resDic["time"] = $"{(DateTime.Now.TimeOfDay - _timeService.GetCrossTimeUpd(exchangePair)).TotalSeconds}";
+                    resDic["time"] = $"{(DateTime.Now.TimeOfDay - TimeService.GetCrossTimeUpd(exchangePair).TimeOfDay).TotalSeconds}";
                 }
+                resDic["purchasePrice"] = $"{exchangePair.PurchasePrice}";
+                resDic["sellPrice"] = $"{exchangePair.SellPrice}";
+                resDic["spread"] = exchangePair.Spread.ToString();
                 return Ok(resDic);
             } else {
                 resDic["result"] = "Not actual";

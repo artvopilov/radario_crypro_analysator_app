@@ -8,7 +8,11 @@ class PairInfo extends React.Component {
         super(props);
 
         this.state = {
-            relevance: null
+            relevance: null,
+            purchasePrice: this.props.purchasePrice,
+            sellPrice: this.props.sellPrice,
+            spread: parseFloat(this.props.spread),
+            spreadClasses: ["spread"]
         }
     }
 
@@ -21,8 +25,18 @@ class PairInfo extends React.Component {
                 btn.classList.remove('loading');
                 const respData = response.data;
                 const relevance =  respData.result === "Ok" ? respData.time : respData.result;
-                this.setState({relevance});
+                const purchasePrice = respData.result === "Ok" ? respData.purchasePrice : "";
+                const sellPrice = respData.result === "Ok" ? respData.sellPrice : "";
+                const spread = respData.result === "Ok" ? parseFloat(respData.spread.replace(',', '.')) : "";
+                let spreadClasses;
+                if (spread === "" || spread === this.state.spread) {
+                    spreadClasses = ["spread"];
+                }
+                else {
+                    spreadClasses = (spread > this.state.spread )? ["spread", "upp"] : ["spread", "down"]
+                }
 
+                this.setState({relevance, purchasePrice, sellPrice, spread, spreadClasses});
             });
     }
 
@@ -30,10 +44,10 @@ class PairInfo extends React.Component {
         return (
             <tr>
                 <td className="pair">{this.props.pair}</td>
-                <td className="buy">{`${this.props.seller}:  ${this.props.purchasePrice}`}</td>
-                <td className="sell">{`${this.props.buyer}:  ${this.props.sellPrice}`}</td>
-                <td className="spread">{this.props.spread}%</td>
-                <td className="special">{this.props.isCross ? "Cross" : ""} {this.props.spread > 3 ? "chance" : ""}</td>
+                <td className="buy">{`${this.props.seller}:  ${this.state.purchasePrice}`}</td>
+                <td className="sell">{`${this.props.buyer}:  ${this.state.sellPrice}`}</td>
+                <td className={this.state.spreadClasses.join(' ')}>{this.state.spread}%</td>
+                <td className="special">{this.props.isCross ? "Cross" : ""} {this.state.spread > 3 ? "chance" : ""}</td>
                 <td className="relevance"><button className="trackBtn" data-label="Track" onClick={e => this.updateRelevance.bind(this)(e)}>Track</button>{this.state.relevance}</td>
             </tr>
         )

@@ -22,14 +22,14 @@ namespace CryptoAnalysatorWebApp.Models
             for (int i = 0; i < marketsArray.Length - 1; i++) {
                 foreach (ExchangePair thatMarketPair in marketsArray[i].Pairs) {
                     ExchangePair pair = AnalysePairs(thatMarketPair, marketsArray, i);
-                    if (pair != null) {
+                    if (pair != null && _actualPairs.Find(p => p.Pair == pair.Pair && p.StockExchangeBuyer == pair.StockExchangeBuyer && p.StockExchangeSeller == pair.StockExchangeSeller) == null) {
                         _actualPairs.Add(pair);
                     }
                 }
 
                 foreach (ExchangePair thatMarketPair in marketsArray[i].Crosses) {
                     ExchangePair crossRate = AnalysePairs(thatMarketPair, marketsArray, i, true);
-                    if (crossRate != null) {
+                    if (crossRate != null && _crossRates.Find(c => c.Pair == crossRate.Pair && c.StockExchangeBuyer == crossRate.StockExchangeBuyer && c.StockExchangeSeller == crossRate.StockExchangeSeller) == null) {
                         _crossRates.Add(crossRate);
                     }
                 }
@@ -51,7 +51,6 @@ namespace CryptoAnalysatorWebApp.Models
                         anotherMarketPair = marketsArray[j].GetCrossByName(name.Substring(name.IndexOf('-') + 1) + '-'
                             + name.Substring(0, name.IndexOf('-'))) ?? thatMarketPair;
                         if (anotherMarketPair != thatMarketPair) {
-                            marketsArray[j].DeleteCrossByName(anotherMarketPair.Pair);
 
                             anotherMarketPair.Pair = name;
                             decimal temp = anotherMarketPair.SellPrice;
@@ -66,7 +65,6 @@ namespace CryptoAnalysatorWebApp.Models
                         anotherMarketPair = marketsArray[j].GetPairByName(name.Substring(name.IndexOf('-') + 1) + '-'
                             + name.Substring(0, name.IndexOf('-'))) ?? thatMarketPair;
                         if (anotherMarketPair != thatMarketPair) {
-                            marketsArray[j].DeletePairByName(anotherMarketPair.Pair);
 
                             anotherMarketPair.Pair = name;
                             decimal temp = anotherMarketPair.SellPrice;
@@ -89,15 +87,14 @@ namespace CryptoAnalysatorWebApp.Models
             }
 
             if (minPurchasePricePair.PurchasePrice < maxSellPricePair.SellPrice) {
-                decimal diff = (maxSellPricePair.SellPrice - minPurchasePricePair.PurchasePrice) / maxSellPricePair.SellPrice;
+                decimal diff = (maxSellPricePair.SellPrice - minPurchasePricePair.PurchasePrice) / minPurchasePricePair.PurchasePrice;
 
                 actualPair.Pair = diff > (decimal)0.1 ? "" + keyWord + minPurchasePricePair.Pair : keyWord + minPurchasePricePair.Pair;
-                actualPair.PurchasePrice = minPurchasePricePair.PurchasePrice;
-                actualPair.SellPrice = maxSellPricePair.SellPrice;
+                actualPair.PurchasePrice = Math.Round(minPurchasePricePair.PurchasePrice, 11);
+                actualPair.SellPrice = Math.Round(maxSellPricePair.SellPrice, 11);
                 actualPair.StockExchangeBuyer = maxSellPricePair.StockExchangeSeller;
                 actualPair.StockExchangeSeller = minPurchasePricePair.StockExchangeSeller;
-                //Костыль с делением
-                actualPair.Spread = Math.Round((actualPair.SellPrice - actualPair.PurchasePrice) / (actualPair.PurchasePrice > 0 ? actualPair.PurchasePrice : 1)  * 100, 4);
+                actualPair.Spread = Math.Round((actualPair.SellPrice - actualPair.PurchasePrice) / actualPair.PurchasePrice * 100, 4);
 
                 return actualPair;
             } else {

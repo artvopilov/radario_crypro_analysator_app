@@ -5,26 +5,35 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using System.Net.Http;
 using Newtonsoft.Json.Linq;
+using CryptoAnalysatorWebApp.TelegramBot.Commands.Common;
 
 namespace CryptoAnalysatorWebApp.TelegramBot.Commands
 {
     public class GetTopPairsCommand : CommonCommand {
-        private int _port;
         public override string Name { get; } = "pairs";
+        private int _port;
 
         public GetTopPairsCommand(int port) {
             _port = port;
         }
 
-        public override void Execute(Message message, TelegramBotClient client) {
+        public override void Execute(Message message, TelegramBotClient client, string channelId = null) {
+            if(message == null) {
+                string responseStr = GetResponse(_port);
+                string botMess = ProcessResponse(responseStr, -1);
+
+                client.SendTextMessageAsync(channelId, botMess);
+                return;
+            }
+
             var chatId = message.Chat.Id;
             var messageId = message.MessageId;
 
-            string numStr = message.Text.Split(' ').Length > 1 ? message.Text.Split(' ')[1] : "0";
+            string numStr = message.Text.Split(' ').Length > 1 ? message.Text.Split(' ')[1] : "-1";
             int numWanted = int.TryParse(numStr, out numWanted) ? numWanted : 0;
 
-            if (numWanted > 0) {
-                string responseStr = GetResponse();
+            if (numWanted != 0) {
+                string responseStr = GetResponse(_port);
                 string botMess = ProcessResponse(responseStr, numWanted);
 
                 client.SendTextMessageAsync(chatId, botMess);
@@ -35,26 +44,17 @@ namespace CryptoAnalysatorWebApp.TelegramBot.Commands
                   
         }
 
-        private string GetResponse() {
-            using (HttpClient httpClient = new HttpClient()) {
-                using (HttpResponseMessage respMessage = httpClient.GetAsync($"http://localhost:{_port}/api/actualpairs").Result) {
-                    using (HttpContent httpContent = respMessage.Content) {
-                        string responseStr = httpContent.ReadAsStringAsync().Result;
-                        return responseStr;
-                    }
-                }
-            }
-        }
-
         private string ProcessResponse(string responseStr, int numWanted) {
-            string botMess = "";
+            string botMess = "Pairs\n";
 
             JArray responseJson = (JArray)JObject.Parse(responseStr)["pairs"];
+
+            numWanted = numWanted != -1 ? numWanted : responseJson.Count;
 
             int count = 0;
             int pairsAmount = responseJson.Count;
             while (count < pairsAmount && count < numWanted) {
-                botMess += $"{count + 1}){responseJson[count]["pair"]} buy<: {responseJson[count]["stockExchangeSeller"]}({responseJson[count]["purchasePrice"]}) " +
+                botMess += $"{count + 1}){responseJson[count]["pair"]} buy: {responseJson[count]["stockExchangeSeller"]}({responseJson[count]["purchasePrice"]}) " +
                     $"sell: {responseJson[count]["stockExchangeBuyer"]}({responseJson[count]["sellPrice"]})\n";
                 count++;
             }

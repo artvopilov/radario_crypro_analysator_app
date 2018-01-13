@@ -24,8 +24,10 @@ namespace CryptoAnalysatorWebApp.Models
                 exPair.SellPrice = ((decimal)pair.Value["buy_price"]) * (1 - _feeMaker);
                 exPair.StockExchangeSeller = "Exmo";
 
-                _pairs.Add(exPair);
-                CheckAddUsdtPair(exPair);
+                bool pairIsOk = CheckPairPrices(exPair);
+                if (pairIsOk) {
+                    _pairs.Add(exPair);
+                }
             }
 
             CreateCrossRates();

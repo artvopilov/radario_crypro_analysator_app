@@ -117,12 +117,18 @@ html {
 
 .pairsAndCrosses .spread {
     width: 15%;
+}
 
+.upp {
+    background-color: mediumspringgreen;
+}
+
+.down {
+    background-color: #F9655B;
 }
 
 .pairsAndCrosses .special {
     width: 16%;
-
 }
 
 .pairsAndCrosses .relevance {

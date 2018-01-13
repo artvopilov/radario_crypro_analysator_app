@@ -20740,7 +20740,11 @@ var PairInfo = function (_React$Component) {
         var _this = _possibleConstructorReturn(this, (PairInfo.__proto__ || Object.getPrototypeOf(PairInfo)).call(this, props));
 
         _this.state = {
-            relevance: null
+            relevance: null,
+            purchasePrice: _this.props.purchasePrice,
+            sellPrice: _this.props.sellPrice,
+            spread: parseFloat(_this.props.spread),
+            spreadClasses: ["spread"]
         };
         return _this;
     }
@@ -20757,7 +20761,17 @@ var PairInfo = function (_React$Component) {
                 btn.classList.remove('loading');
                 var respData = response.data;
                 var relevance = respData.result === "Ok" ? respData.time : respData.result;
-                _this2.setState({ relevance: relevance });
+                var purchasePrice = respData.result === "Ok" ? respData.purchasePrice : "";
+                var sellPrice = respData.result === "Ok" ? respData.sellPrice : "";
+                var spread = respData.result === "Ok" ? parseFloat(respData.spread.replace(',', '.')) : "";
+                var spreadClasses = void 0;
+                if (spread === "" || spread === _this2.state.spread) {
+                    spreadClasses = ["spread"];
+                } else {
+                    spreadClasses = spread > _this2.state.spread ? ["spread", "upp"] : ["spread", "down"];
+                }
+
+                _this2.setState({ relevance: relevance, purchasePrice: purchasePrice, sellPrice: sellPrice, spread: spread, spreadClasses: spreadClasses });
             });
         }
     }, {
@@ -20776,17 +20790,17 @@ var PairInfo = function (_React$Component) {
                 React.createElement(
                     'td',
                     { className: 'buy' },
-                    this.props.seller + ':  ' + this.props.purchasePrice
+                    this.props.seller + ':  ' + this.state.purchasePrice
                 ),
                 React.createElement(
                     'td',
                     { className: 'sell' },
-                    this.props.buyer + ':  ' + this.props.sellPrice
+                    this.props.buyer + ':  ' + this.state.sellPrice
                 ),
                 React.createElement(
                     'td',
-                    { className: 'spread' },
-                    this.props.spread,
+                    { className: this.state.spreadClasses.join(' ') },
+                    this.state.spread,
                     '%'
                 ),
                 React.createElement(
@@ -20794,7 +20808,7 @@ var PairInfo = function (_React$Component) {
                     { className: 'special' },
                     this.props.isCross ? "Cross" : "",
                     ' ',
-                    this.props.spread > 3 ? "chance" : ""
+                    this.state.spread > 3 ? "chance" : ""
                 ),
                 React.createElement(
                     'td',

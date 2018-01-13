@@ -20,8 +20,10 @@ namespace CryptoAnalysatorWebApp.Models
                 exPair.SellPrice = (decimal)pair.Value["highestBid"] * (1 - _feeMaker);
                 exPair.StockExchangeSeller = "Poloniex";
 
-                _pairs.Add(exPair);
-                CheckAddUsdtPair(exPair);
+                bool pairIsOk = CheckPairPrices(exPair);
+                if (pairIsOk) {
+                    _pairs.Add(exPair);
+                }   
             }
 
             CreateCrossRates();
