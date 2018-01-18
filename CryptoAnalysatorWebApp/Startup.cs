@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Threading;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -35,10 +36,13 @@ namespace CryptoAnalysatorWebApp
             services.AddScoped<ExmoMarket>();
             services.AddScoped<BittrexMarket>();
             services.AddScoped<PoloniexMarket>();
-            services.AddSingleton<PairsAnalysator>();
+            services.AddScoped<PairsAnalysator>();
 
             Bot.Get();
-            Bot.StartChannelPosting();
+
+            Thread t1 = new Thread(Bot.StartChannelPosting);
+            t1.Start();
+            //Bot.StartChannelPosting();
 
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddReact();

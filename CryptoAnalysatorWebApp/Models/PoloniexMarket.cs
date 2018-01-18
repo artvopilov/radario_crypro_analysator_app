@@ -22,7 +22,7 @@ namespace CryptoAnalysatorWebApp.Models
 
                 bool pairIsOk = CheckPairPrices(exPair);
                 if (pairIsOk) {
-                    _pairs.Add(exPair);
+                    _pairs.Add(exPair.Pair, exPair);
                 }   
             }
 

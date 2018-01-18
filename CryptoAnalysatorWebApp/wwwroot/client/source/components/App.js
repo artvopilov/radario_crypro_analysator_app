@@ -18,12 +18,23 @@ class App extends React.Component {
 
 
     componentDidMount() {
-        this.updatePairs(); 
+        this.updatePairs(null);
     }
 
-    updatePairs() {
+    updatePairs(event) {
+        let btn;
+        if (event !== null) {
+            event.preventDefault();
+            btn = event.target.lastChild;
+            btn.innerText = "Loading...";
+            btn.classList.add('loading');
+        }
         axios.get('/api/actualpairs/')
             .then((response) => {
+                if (event !== null) {
+                    btn.innerText = "Update";
+                    btn.classList.remove('loading');
+            }
                 const pairs = response.data.pairs;
                 const crosses = response.data.crosses;
 
@@ -39,12 +50,12 @@ class App extends React.Component {
 
     render() {
         return (
-            <div id="app">
-                <StatusBar/>
-                <Tools onChangeFilter={this.onChangeFilter.bind(this)} updatePairs={this.updatePairs.bind(this)}/>
-                <ActualPairs data={this.state.pairs} areCrosses={false} filter={this.state.filter}/>
-                <ActualPairs data={this.state.crosses} areCrosses={true} filter={this.state.filter}/>
-            </div>
+                <div id="app">
+                    <StatusBar/>
+                    <Tools onChangeFilter={this.onChangeFilter.bind(this)} updatePairs={this.updatePairs.bind(this)}/>
+                    <ActualPairs data={this.state.pairs} areCrosses={false} filter={this.state.filter}/>
+                    <ActualPairs data={this.state.crosses} areCrosses={true} filter={this.state.filter}/>
+                </div>
         )
     }
 }

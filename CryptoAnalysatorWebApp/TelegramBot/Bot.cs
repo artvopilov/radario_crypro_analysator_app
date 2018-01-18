@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Threading;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using System.Timers;
@@ -9,6 +10,7 @@ using CryptoAnalysatorWebApp.TelegramBot.Commands.Common;
 using CryptoAnalysatorWebApp.TelegramBot.Commands;
 using System.Net.Http;
 using CryptoAnalysatorWebApp.Models;
+using CryptoAnalysatorWebApp.Models.Common;
 
 namespace CryptoAnalysatorWebApp.TelegramBot
 {
@@ -39,70 +41,84 @@ namespace CryptoAnalysatorWebApp.TelegramBot
             _commands.Add(new CheckCensorshipCommand());
 
             _client = new TelegramBotClient(BotSettings.AccessToken);
-            _client.SetWebhookAsync("https://2a62f646.ngrok.io/api/telegrambot").Wait();
+            _client.SetWebhookAsync("https://add7b70b.ngrok.io/api/telegrambot").Wait();
 
             return _client;
         }
 
         public static void StartChannelPosting() {
-            if (_client == null) {
-                return;
+            while (_client == null) {
+                Console.WriteLine("no client");
+                Thread.Sleep(1000);
             }
-            Task.Run(async () => {
-                DateTime maxDateTimePairs = DateTime.Now;
-                DateTime maxDateTimeCrosses = DateTime.Now;
-                while (true) {
-                    string message = "";
 
-                    Console.WriteLine("Bot Works In Channel");
+            DateTime maxDateTimePairs = DateTime.Now;
+            DateTime maxDateTimeCrosses = DateTime.Now;
+            while (true) {
+                string message = "";
 
-                    using (HttpClient httpClient = new HttpClient()) {
-                        httpClient.GetAsync($"http://localhost:{_port}/api/actualpairs").Wait();
-                    }
+                Console.WriteLine($"Bot Works In Channel");
+                PairsAnalysator pairsAnalysator = new PairsAnalysator();
 
-                    DateTime timeP = TimeService.TimePairs.Max(tp => tp.Value);
-                    DateTime timeC = TimeService.TimeCrosses.Max(tp => tp.Value);
+                BasicCryptoMarket[] marketsArray = { new PoloniexMarket(), new BittrexMarket(), new ExmoMarket() };
+                pairsAnalysator.FindActualPairsAndCrossRates(marketsArray, "bot");
 
-                    maxDateTimePairs = timeP > maxDateTimePairs ? timeP : DateTime.Now;
-                    maxDateTimeCrosses = timeC > maxDateTimeCrosses ? timeC : DateTime.Now;
+                Console.WriteLine("ANALYSED");
 
-                    int count = 0;
-                    foreach (KeyValuePair<ExchangePair, DateTime> kvp in TimeService.TimePairs) {
-                        if (kvp.Value == maxDateTimePairs && count < 30) {
-                            ExchangePair exchangePair = kvp.Key;
+                Dictionary<string, List<ExchangePair>> pairsDic = new Dictionary<string, List<ExchangePair>>();
+                pairsDic["crosses"] = pairsAnalysator.CrossPairs.OrderByDescending(p => p.Spread).ToList();
+                pairsDic["pairs"] = pairsAnalysator.ActualPairs.OrderByDescending(p => p.Spread).ToList();
 
-                            if (exchangePair.Spread > 5) {
-                                message += $"{count + 1}) {exchangePair.Pair} buy: {exchangePair.StockExchangeSeller}({exchangePair.PurchasePrice}) " +
-                                                                                     $"sell: {exchangePair.StockExchangeBuyer}({exchangePair.SellPrice})\n";
-                                count++;
-                            }
+                TimeService.StoreTime(DateTime.Now, pairsDic["pairs"].ToList(), pairsDic["crosses"].ToList());
 
+
+                DateTime timeP = TimeService.TimePairs.Max(tp => tp.Value);
+                DateTime timeC = TimeService.TimeCrosses.Max(tp => tp.Value);
+
+                Console.WriteLine($"maxDateTimePairs: {maxDateTimePairs}  maxDateTimeCrosses: {maxDateTimeCrosses}");
+                Console.WriteLine($"TIMEPAIR: {timeP}  TIMECROSSES: {timeC}");
+
+                maxDateTimePairs = timeP > maxDateTimePairs ? timeP : DateTime.Now;
+                maxDateTimeCrosses = timeC > maxDateTimeCrosses ? timeC : DateTime.Now;
+
+                int count = 0;
+                foreach (KeyValuePair<ExchangePair, DateTime> kvp in TimeService.TimePairs) {
+                    if (kvp.Value == maxDateTimePairs && count < 15) {
+                        ExchangePair exchangePair = kvp.Key;
+
+                        if (exchangePair.Spread > 3) {
+                            message += $"{count + 1}) {exchangePair.Pair} buy: {exchangePair.StockExchangeSeller}({exchangePair.PurchasePrice}) " +
+                                                                                 $"sell: {exchangePair.StockExchangeBuyer}({exchangePair.SellPrice})\n";
+                            count++;
                         }
+
                     }
-
-                    foreach (KeyValuePair<ExchangePair, DateTime> kvp in TimeService.TimeCrosses) {
-                        if (kvp.Value == maxDateTimeCrosses && count < 30) {
-                            ExchangePair exchangePair = kvp.Key;
-
-                            if (exchangePair.Spread > 5) {
-                                message += $"{count + 1}) {exchangePair.Pair} buy: {exchangePair.StockExchangeSeller}({exchangePair.PurchasePrice}) " +
-                                                                                    $"sell: {exchangePair.StockExchangeBuyer}({exchangePair.SellPrice})\n";
-                                count++;
-                            }
-                        }
-                    }
-
-                    if (message == "") {
-                        await Task.Delay(35000);
-                        continue;
-                    }
-
-                    string channelId = "-1001333185321";
-                    await _client.SendTextMessageAsync(channelId, message);
-
-                    await Task.Delay(35000);
                 }
-            });
+
+                foreach (KeyValuePair<ExchangePair, DateTime> kvp in TimeService.TimeCrosses) {
+                    if (kvp.Value == maxDateTimeCrosses && count < 30) {
+                        ExchangePair exchangePair = kvp.Key;
+
+                        if (exchangePair.Spread > 3) {
+                            message += $"{count + 1}) {exchangePair.Pair} buy: {exchangePair.StockExchangeSeller}({exchangePair.PurchasePrice}) " +
+                                                                                $"sell: {exchangePair.StockExchangeBuyer}({exchangePair.SellPrice})\n";
+                            count++;
+                        }
+                    }
+                }
+
+                if (message == "") {
+                    Console.WriteLine("ANY MESSAGE");
+                    Thread.Sleep(2000);
+                    continue;
+                } else {
+                    //Console.WriteLine($"MESSAGE: {message}");
+                    string channelId = "-1001333185321";
+                    _client.SendTextMessageAsync(channelId, message);
+
+                    Thread.Sleep(2000);
+                }
+            }
         }
     }
 }

@@ -19023,14 +19023,25 @@ var App = function (_React$Component) {
     _createClass(App, [{
         key: 'componentDidMount',
         value: function componentDidMount() {
-            this.updatePairs();
+            this.updatePairs(null);
         }
     }, {
         key: 'updatePairs',
-        value: function updatePairs() {
+        value: function updatePairs(event) {
             var _this2 = this;
 
+            var btn = void 0;
+            if (event !== null) {
+                event.preventDefault();
+                btn = event.target.lastChild;
+                btn.innerText = "Loading...";
+                btn.classList.add('loading');
+            }
             axios.get('/api/actualpairs/').then(function (response) {
+                if (event !== null) {
+                    btn.innerText = "Update";
+                    btn.classList.remove('loading');
+                }
                 var pairs = response.data.pairs;
                 var crosses = response.data.crosses;
 
@@ -20740,6 +20751,9 @@ var PairInfo = function (_React$Component) {
         var _this = _possibleConstructorReturn(this, (PairInfo.__proto__ || Object.getPrototypeOf(PairInfo)).call(this, props));
 
         _this.state = {
+            pair: _this.props.pair,
+            seller: _this.props.seller,
+            buyer: _this.props.buyer,
             relevance: null,
             purchasePrice: _this.props.purchasePrice,
             sellPrice: _this.props.sellPrice,
@@ -20758,6 +20772,7 @@ var PairInfo = function (_React$Component) {
             var btn = e.target;
             btn.classList.add('loading');
             axios.get(this.props.url).then(function (response) {
+                console.log("track");
                 btn.classList.remove('loading');
                 var respData = response.data;
                 var relevance = respData.result === "Ok" ? respData.time : respData.result;
@@ -20772,6 +20787,17 @@ var PairInfo = function (_React$Component) {
                 }
 
                 _this2.setState({ relevance: relevance, purchasePrice: purchasePrice, sellPrice: sellPrice, spread: spread, spreadClasses: spreadClasses });
+            });
+        }
+    }, {
+        key: 'componentWillReceiveProps',
+        value: function componentWillReceiveProps(props) {
+            this.setState({
+                relevance: null,
+                purchasePrice: props.purchasePrice,
+                sellPrice: props.sellPrice,
+                spread: parseFloat(props.spread),
+                spreadClasses: ["spread"]
             });
         }
     }, {
@@ -20808,7 +20834,7 @@ var PairInfo = function (_React$Component) {
                     { className: 'special' },
                     this.props.isCross ? "Cross" : "",
                     ' ',
-                    this.state.spread > 3 ? "chance" : ""
+                    this.state.spread > 8 ? "Chance" : ""
                 ),
                 React.createElement(
                     'td',
@@ -20875,7 +20901,9 @@ var Tools = function (_React$Component) {
 
             return React.createElement(
                 'form',
-                { id: 'tools', onSubmit: this.props.updatePairs },
+                { id: 'tools', onSubmit: function onSubmit(event) {
+                        return _this2.props.updatePairs(event);
+                    } },
                 React.createElement(
                     'label',
                     null,
@@ -20887,7 +20915,7 @@ var Tools = function (_React$Component) {
                 '%',
                 React.createElement(
                     'button',
-                    null,
+                    { id: 'updateBtn' },
                     'Update'
                 )
             );

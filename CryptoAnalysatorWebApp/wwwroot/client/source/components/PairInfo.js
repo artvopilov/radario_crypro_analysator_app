@@ -8,6 +8,9 @@ class PairInfo extends React.Component {
         super(props);
 
         this.state = {
+            pair: this.props.pair,
+            seller: this.props.seller,
+            buyer: this.props.buyer,
             relevance: null,
             purchasePrice: this.props.purchasePrice,
             sellPrice: this.props.sellPrice,
@@ -22,6 +25,7 @@ class PairInfo extends React.Component {
         btn.classList.add('loading');
         axios.get(this.props.url)
             .then(response => {
+                console.log("track");
                 btn.classList.remove('loading');
                 const respData = response.data;
                 const relevance =  respData.result === "Ok" ? respData.time : respData.result;
@@ -40,6 +44,16 @@ class PairInfo extends React.Component {
             });
     }
 
+    componentWillReceiveProps(props) {
+        this.setState({
+            relevance: null,
+            purchasePrice: props.purchasePrice,
+            sellPrice: props.sellPrice,
+            spread: parseFloat(props.spread),
+            spreadClasses: ["spread"]
+        })
+    }
+
     render() {
         return (
             <tr>
@@ -47,7 +61,7 @@ class PairInfo extends React.Component {
                 <td className="buy">{`${this.props.seller}:  ${this.state.purchasePrice}`}</td>
                 <td className="sell">{`${this.props.buyer}:  ${this.state.sellPrice}`}</td>
                 <td className={this.state.spreadClasses.join(' ')}>{this.state.spread}%</td>
-                <td className="special">{this.props.isCross ? "Cross" : ""} {this.state.spread > 3 ? "chance" : ""}</td>
+                <td className="special">{this.props.isCross ? "Cross" : ""} {this.state.spread > 8 ? "Chance" : ""}</td>
                 <td className="relevance"><button className="trackBtn" data-label="Track" onClick={e => this.updateRelevance.bind(this)(e)}>Track</button>{this.state.relevance}</td>
             </tr>
         )

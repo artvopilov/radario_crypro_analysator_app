@@ -59,7 +59,7 @@ html {
     border-radius: 5px;
 }
 
-#tools button {
+#tools #updateBtn {
     margin-left: 10px;
     height: 100%;
     width: 40%;
@@ -69,9 +69,14 @@ html {
     cursor: pointer;
 }
 
-#tools button:active {
+#tools #updateBtn:active {
     border: 1px solid black;
     border-radius: 5px;
+}
+
+#tools #updateBtn.loading{
+    background-color: bisque;
+    cursor: not-allowed;
 }
 
 .pairsAndCrosses {

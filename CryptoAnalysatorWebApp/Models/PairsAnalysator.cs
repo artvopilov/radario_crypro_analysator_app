@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using CryptoAnalysatorWebApp.Models.Common;
+using System.Diagnostics;
 
 namespace CryptoAnalysatorWebApp.Models
 {
@@ -16,23 +17,31 @@ namespace CryptoAnalysatorWebApp.Models
         public List<ExchangePair> ActualPairs { get => _actualPairs; set => _actualPairs = value; }
         public List<ExchangePair> CrossPairs { get => _crossRates; set => _crossRates = value; }
 
-        public void FindActualPairsAndCrossRates(BasicCryptoMarket[] marketsArray) {
+        public void FindActualPairsAndCrossRates(BasicCryptoMarket[] marketsArray, string caller) {
             _actualPairs.Clear();
             _crossRates.Clear();
             for (int i = 0; i < marketsArray.Length - 1; i++) {
-                foreach (ExchangePair thatMarketPair in marketsArray[i].Pairs) {
+                Stopwatch sw1 = new Stopwatch();
+                sw1.Start();
+                foreach (ExchangePair thatMarketPair in marketsArray[i].Pairs.Values) {
                     ExchangePair pair = AnalysePairs(thatMarketPair, marketsArray, i);
                     if (pair != null && _actualPairs.Find(p => p.Pair == pair.Pair && p.StockExchangeBuyer == pair.StockExchangeBuyer && p.StockExchangeSeller == pair.StockExchangeSeller) == null) {
                         _actualPairs.Add(pair);
                     }
                 }
+                sw1.Stop();
+                Console.WriteLine($"PAIRS:  {sw1.Elapsed}   CALLER: {caller}");
 
-                foreach (ExchangePair thatMarketPair in marketsArray[i].Crosses) {
+                Stopwatch sw2 = new Stopwatch();
+                sw2.Start();
+                foreach (ExchangePair thatMarketPair in marketsArray[i].Crosses.Values) {
                     ExchangePair crossRate = AnalysePairs(thatMarketPair, marketsArray, i, true);
                     if (crossRate != null && _crossRates.Find(c => c.Pair == crossRate.Pair && c.StockExchangeBuyer == crossRate.StockExchangeBuyer && c.StockExchangeSeller == crossRate.StockExchangeSeller) == null) {
                         _crossRates.Add(crossRate);
                     }
                 }
+                sw2.Stop();
+                Console.WriteLine($"CROSSES:  {sw2.Elapsed}   CALLER: {caller}");
             }
         }
 
@@ -99,18 +108,6 @@ namespace CryptoAnalysatorWebApp.Models
                 return actualPair;
             } else {
                 return null;
-            }
-        }
-
-        public void ShowActualPairsAndCrossRates() {
-            foreach (ExchangePair pair in _actualPairs) {
-                Console.WriteLine($"{pair.Pair}: {pair.StockExchangeSeller} >> {pair.StockExchangeBuyer} || " +
-                    $"{pair.PurchasePrice} >> {pair.SellPrice}");
-            }
-            Console.WriteLine("\n      ___|__|__|__|__|__|___ \n         |  |  |  |  |  |\n");
-            foreach (ExchangePair pair in _crossRates) {
-                Console.WriteLine($"{pair.Pair}: {pair.StockExchangeSeller} >> {pair.StockExchangeBuyer} || " +
-                    $"{pair.PurchasePrice} >> {pair.SellPrice}");
             }
         }
     }

@@ -6,8 +6,8 @@ namespace CryptoAnalysatorWebApp.Interfaces
 {
     public interface ICryptoMarket
     {
-        List<ExchangePair> Pairs { get;  }
-        List<ExchangePair> Crosses { get; }
+        Dictionary<string, ExchangePair> Pairs { get;  }
+        Dictionary<string, ExchangePair> Crosses { get; }
 
         void LoadPairs(string command);
 

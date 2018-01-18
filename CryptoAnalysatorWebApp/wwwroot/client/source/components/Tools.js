@@ -9,10 +9,10 @@ class Tools extends React.Component {
 
     render() {
         return (
-            <form id="tools" onSubmit={this.props.updatePairs}>
+            <form id="tools" onSubmit={event => this.props.updatePairs(event)}>
                 <label>Filter: </label>
                 <input type="text" onChange={event => this.props.onChangeFilter(event)}/>%
-                <button>Update</button>
+                <button id="updateBtn">Update</button>
             </form>
         )
     }
