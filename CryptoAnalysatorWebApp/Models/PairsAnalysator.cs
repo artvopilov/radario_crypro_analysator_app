@@ -21,27 +21,19 @@ namespace CryptoAnalysatorWebApp.Models
             _actualPairs.Clear();
             _crossRates.Clear();
             for (int i = 0; i < marketsArray.Length - 1; i++) {
-                Stopwatch sw1 = new Stopwatch();
-                sw1.Start();
                 foreach (ExchangePair thatMarketPair in marketsArray[i].Pairs.Values) {
                     ExchangePair pair = AnalysePairs(thatMarketPair, marketsArray, i);
                     if (pair != null && _actualPairs.Find(p => p.Pair == pair.Pair && p.StockExchangeBuyer == pair.StockExchangeBuyer && p.StockExchangeSeller == pair.StockExchangeSeller) == null) {
                         _actualPairs.Add(pair);
                     }
                 }
-                sw1.Stop();
-                Console.WriteLine($"PAIRS:  {sw1.Elapsed}   CALLER: {caller}");
 
-                Stopwatch sw2 = new Stopwatch();
-                sw2.Start();
                 foreach (ExchangePair thatMarketPair in marketsArray[i].Crosses.Values) {
                     ExchangePair crossRate = AnalysePairs(thatMarketPair, marketsArray, i, true);
                     if (crossRate != null && _crossRates.Find(c => c.Pair == crossRate.Pair && c.StockExchangeBuyer == crossRate.StockExchangeBuyer && c.StockExchangeSeller == crossRate.StockExchangeSeller) == null) {
                         _crossRates.Add(crossRate);
                     }
                 }
-                sw2.Stop();
-                Console.WriteLine($"CROSSES:  {sw2.Elapsed}   CALLER: {caller}");
             }
         }
 

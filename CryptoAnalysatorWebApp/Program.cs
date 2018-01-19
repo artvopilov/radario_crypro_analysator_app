@@ -24,6 +24,8 @@ namespace CryptoAnalysatorWebApp
                 port = 5000;
             }
             return WebHost.CreateDefaultBuilder(args)
+                .UseSetting(WebHostDefaults.DetailedErrorsKey, "true")
+                .CaptureStartupErrors(true)                
                 .UseStartup<Startup>()
                 .UseKestrel(options => {
                     options.Listen(IPAddress.Any, port);

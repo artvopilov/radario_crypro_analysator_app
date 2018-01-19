@@ -36,6 +36,7 @@ namespace CryptoAnalysatorWebApp
             services.AddScoped<ExmoMarket>();
             services.AddScoped<BittrexMarket>();
             services.AddScoped<PoloniexMarket>();
+            services.AddScoped<BinanceMarket>();
             services.AddScoped<PairsAnalysator>();
 
             Bot.Get();

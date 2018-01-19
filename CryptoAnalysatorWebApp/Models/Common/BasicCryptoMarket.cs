@@ -32,8 +32,12 @@ namespace CryptoAnalysatorWebApp.Models.Common
 
         public void LoadPairs(string command) {
             _pairs.Clear();
-            string response = GetResponse(_basicUrl + command);
-            ProcessResponsePairs(response);
+            try {
+                string response = GetResponse(_basicUrl + command);
+                ProcessResponsePairs(response);
+            } catch (Exception e) {
+                Console.WriteLine(e.Message);
+            }
         }
 
         protected abstract void ProcessResponsePairs(string response);
@@ -59,15 +63,6 @@ namespace CryptoAnalysatorWebApp.Models.Common
                         crossRatePair.StockExchangeSeller = pair1.StockExchangeSeller;
 
                         _crossRates.Add(crossRatePair.Pair.ToString(), crossRatePair);
-                    //} else {
-                    //    if (splitedPair1[1] == splitedPair2[1] && splitedPair1[0] == splitedPair2[0]) {
-                    //        crossRatePair.Pair = splitedPair1[0] + '-' + splitedPair2[0];
-                    //        crossRatePair.SellPrice = 1 / (pair1.SellPrice / pair1.PurchasePrice);
-                    //        crossRatePair.PurchasePrice = 1 / (pair1.PurchasePrice / pair2.SellPrice);
-                    //        crossRatePair.StockExchangeSeller = pair1.StockExchangeSeller;
-
-                    //        _crossRates.Add(crossRatePair);
-                    //    }
                     }
                 }
             }
@@ -94,14 +89,17 @@ namespace CryptoAnalysatorWebApp.Models.Common
         }
 
         protected string GetResponse(string url) {
+            Console.WriteLine($"Trying to get url {url}");
             using (HttpClient client = new HttpClient()) {
-                using (HttpResponseMessage response = client.GetAsync(url).Result) {
-                    using (HttpContent content = response.Content) {
-                        string responseStr = content.ReadAsStringAsync().Result;
-                        return responseStr;
+                    using (HttpResponseMessage response = client.GetAsync(url).Result) {
+                        Console.WriteLine($"Got {response.StatusCode}.");
+                        using (HttpContent content = response.Content) {
+                            string responseStr = content.ReadAsStringAsync().Result;
+                            Console.WriteLine("Success.");
+                            return responseStr;
+                        }
                     }
                 }
-            }
         }
     }
 }

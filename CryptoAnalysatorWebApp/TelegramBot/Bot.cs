@@ -60,7 +60,7 @@ namespace CryptoAnalysatorWebApp.TelegramBot
                 Console.WriteLine($"Bot Works In Channel");
                 PairsAnalysator pairsAnalysator = new PairsAnalysator();
 
-                BasicCryptoMarket[] marketsArray = { new PoloniexMarket(), new BittrexMarket(), new ExmoMarket() };
+                BasicCryptoMarket[] marketsArray = { new PoloniexMarket(), new BittrexMarket(), new ExmoMarket(), new BinanceMarket() };
                 pairsAnalysator.FindActualPairsAndCrossRates(marketsArray, "bot");
 
                 Console.WriteLine("ANALYSED");
@@ -75,9 +75,6 @@ namespace CryptoAnalysatorWebApp.TelegramBot
                 DateTime timeP = TimeService.TimePairs.Max(tp => tp.Value);
                 DateTime timeC = TimeService.TimeCrosses.Max(tp => tp.Value);
 
-                Console.WriteLine($"maxDateTimePairs: {maxDateTimePairs}  maxDateTimeCrosses: {maxDateTimeCrosses}");
-                Console.WriteLine($"TIMEPAIR: {timeP}  TIMECROSSES: {timeC}");
-
                 maxDateTimePairs = timeP > maxDateTimePairs ? timeP : DateTime.Now;
                 maxDateTimeCrosses = timeC > maxDateTimeCrosses ? timeC : DateTime.Now;
 
@@ -86,7 +83,7 @@ namespace CryptoAnalysatorWebApp.TelegramBot
                     if (kvp.Value == maxDateTimePairs && count < 15) {
                         ExchangePair exchangePair = kvp.Key;
 
-                        if (exchangePair.Spread > 3) {
+                        if (exchangePair.Spread > 4) {
                             message += $"{count + 1}) {exchangePair.Pair} buy: {exchangePair.StockExchangeSeller}({exchangePair.PurchasePrice}) " +
                                                                                  $"sell: {exchangePair.StockExchangeBuyer}({exchangePair.SellPrice})\n";
                             count++;
@@ -99,7 +96,7 @@ namespace CryptoAnalysatorWebApp.TelegramBot
                     if (kvp.Value == maxDateTimeCrosses && count < 30) {
                         ExchangePair exchangePair = kvp.Key;
 
-                        if (exchangePair.Spread > 3) {
+                        if (exchangePair.Spread > 4) {
                             message += $"{count + 1}) {exchangePair.Pair} buy: {exchangePair.StockExchangeSeller}({exchangePair.PurchasePrice}) " +
                                                                                 $"sell: {exchangePair.StockExchangeBuyer}({exchangePair.SellPrice})\n";
                             count++;
@@ -108,11 +105,9 @@ namespace CryptoAnalysatorWebApp.TelegramBot
                 }
 
                 if (message == "") {
-                    Console.WriteLine("ANY MESSAGE");
                     Thread.Sleep(2000);
                     continue;
                 } else {
-                    //Console.WriteLine($"MESSAGE: {message}");
                     string channelId = "-1001333185321";
                     _client.SendTextMessageAsync(channelId, message);
 
