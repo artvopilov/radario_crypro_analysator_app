@@ -1,7 +1,6 @@
 ﻿using System;
 using Newtonsoft.Json.Linq;
 using CryptoAnalysatorWebApp.Models.Common;
-using CryptoAnalysatorWebApp.Interfaces;
 
 namespace CryptoAnalysatorWebApp.Models
 {

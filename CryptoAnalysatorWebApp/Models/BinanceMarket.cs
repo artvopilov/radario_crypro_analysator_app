@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using CryptoAnalysatorWebApp.Models.Common;
 using Newtonsoft.Json.Linq;
 using System.Text.RegularExpressions;

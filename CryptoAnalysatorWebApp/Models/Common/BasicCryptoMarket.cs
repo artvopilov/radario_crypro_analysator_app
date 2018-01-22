@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using CryptoAnalysatorWebApp.Interfaces;
-using Newtonsoft.Json.Linq;
 
 namespace CryptoAnalysatorWebApp.Models.Common
 {

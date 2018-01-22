@@ -1,17 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
 using CryptoAnalysatorWebApp.Models.Common;
 using CryptoAnalysatorWebApp.Models;
-using CryptoAnalysatorWebApp.Interfaces;
-using Newtonsoft.Json.Linq;
-using Telegram.Bot;
-using Telegram.Bot.Types;
-using CryptoAnalysatorWebApp.TelegramBot;
-using CryptoAnalysatorWebApp.TelegramBot.Commands;
+
     
 namespace CryptoAnalysatorWebApp.Controllers
 {
@@ -45,8 +38,6 @@ namespace CryptoAnalysatorWebApp.Controllers
             pairsDic["crosses"] = _pairsAnalysator.CrossPairs.OrderByDescending(p => p.Spread).ToList();
             pairsDic["pairs"] = _pairsAnalysator.ActualPairs.OrderByDescending(p => p.Spread).ToList();
 
-            //TimeService.StoreTime(DateTime.Now, pairsDic["pairs"].ToList(), pairsDic["crosses"].ToList());
-
             return Ok(pairsDic);
         }
 
@@ -63,6 +54,7 @@ namespace CryptoAnalysatorWebApp.Controllers
             Dictionary<string, string> resDic = new Dictionary<string, string>();
             exchangePair = TimeService.GetPairOrCross(curPair.ToUpper(), seller, buyer, isCross);
             if (exchangePair == null) {
+                Console.WriteLine("NUUUUULLLL");
                 resDic["result"] = "Not actual";
                 resDic["purchasePrice"] = $"{resPurchasePrice}";
                 resDic["sellPrice"] = $"{resSellPrice}";
@@ -152,16 +144,16 @@ namespace CryptoAnalysatorWebApp.Controllers
             if (pricesAreOk) {
                 resDic["result"] = "Ok";
                 if (!isCross) {
-                    resDic["time"] = $"{(DateTime.Now - TimeService.GetPairTimeUpd(exchangePair)).TotalSeconds}";
+                    resDic["time"] = $"{(DateTime.Now - TimeService.GetPairTimeUpd(exchangePair))}";
                 } else {
-                    resDic["time"] = $"{(DateTime.Now - TimeService.GetCrossTimeUpd(exchangePair)).TotalSeconds}";
+                    resDic["time"] = $"{(DateTime.Now - TimeService.GetCrossTimeUpd(exchangePair))}";
                 }
                 resDic["purchasePrice"] = $"{Math.Round(resPurchasePrice, 11)}";
                 resDic["sellPrice"] = $"{Math.Round(resSellPrice, 11)}";
                 resDic["spread"] = Math.Round((resSellPrice - resPurchasePrice) / resPurchasePrice * 100, 4).ToString();
                 return Ok(resDic);
             } else {
-                resDic["result"] = "Not actual";
+                resDic["result"] = "Not actual (probably no orders)";
                 return Ok(resDic);
             }
 

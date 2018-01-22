@@ -1,14 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Threading;
 using Telegram.Bot;
-using Telegram.Bot.Types;
-using System.Timers;
 using CryptoAnalysatorWebApp.TelegramBot.Commands.Common;
 using CryptoAnalysatorWebApp.TelegramBot.Commands;
-using System.Net.Http;
 using CryptoAnalysatorWebApp.Models;
 using CryptoAnalysatorWebApp.Models.Common;
 
@@ -83,9 +79,10 @@ namespace CryptoAnalysatorWebApp.TelegramBot
                     if (kvp.Value == maxDateTimePairs && count < 15) {
                         ExchangePair exchangePair = kvp.Key;
 
-                        if (exchangePair.Spread > 4) {
-                            message += $"{count + 1}) {exchangePair.Pair} buy: {exchangePair.StockExchangeSeller}({exchangePair.PurchasePrice}) " +
-                                                                                 $"sell: {exchangePair.StockExchangeBuyer}({exchangePair.SellPrice})\n";
+                        if (exchangePair.Spread > 5) {
+                            message += $"{count + 1}) {exchangePair.Pair}       {exchangePair.Spread}%\n" +
+                                $"{exchangePair.StockExchangeSeller.ToUpper()}({exchangePair.PurchasePrice}) -> " +
+                                $"{exchangePair.StockExchangeBuyer.ToUpper()}({exchangePair.SellPrice}) \n";
                             count++;
                         }
 
@@ -96,9 +93,10 @@ namespace CryptoAnalysatorWebApp.TelegramBot
                     if (kvp.Value == maxDateTimeCrosses && count < 30) {
                         ExchangePair exchangePair = kvp.Key;
 
-                        if (exchangePair.Spread > 4) {
-                            message += $"{count + 1}) {exchangePair.Pair} buy: {exchangePair.StockExchangeSeller}({exchangePair.PurchasePrice}) " +
-                                                                                $"sell: {exchangePair.StockExchangeBuyer}({exchangePair.SellPrice})\n";
+                        if (exchangePair.Spread > 5) {
+                            message += $"{count + 1}) {exchangePair.Pair}       {exchangePair.Spread}%\n" +
+                                $"{exchangePair.StockExchangeSeller} ({exchangePair.PurchasePrice}) -> " +
+                                $"{exchangePair.StockExchangeBuyer} ({exchangePair.SellPrice}) \n";
                             count++;
                         }
                     }
