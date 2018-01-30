@@ -45,7 +45,7 @@ namespace CryptoAnalysatorWebApp.Models
         }
 
         public override decimal LoadOrder(string currencyPair, bool isSeller, bool reversePice = false) {
-            if (_pairs[currencyPair] == null) {
+            if (!_pairs.ContainsKey(currencyPair)) {
                 currencyPair = $"{currencyPair.Split('-')[1]}-{currencyPair.Split('-')[0]}";
                 isSeller = isSeller == true ? false : true;
                 reversePice = reversePice == true ? false : true;

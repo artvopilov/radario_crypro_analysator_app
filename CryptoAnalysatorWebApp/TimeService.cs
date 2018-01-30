@@ -25,7 +25,7 @@ namespace CryptoAnalysatorWebApp
         }
 
         public static DateTime GetCrossByMarketTimeUpd (ExchangePair crossByMarket) {
-            return _timeUpdatedCrosses.TryGetValue(crossByMarket, out DateTime value) ? value : DateTime.Now;
+            return _timeUpdatedCrossesByMarket.TryGetValue(crossByMarket, out DateTime value) ? value : DateTime.Now;
         }
 
         public static ExchangePair GetPairOrCross(string pairArg, string seller, string buyer, bool isCross) {
@@ -47,9 +47,8 @@ namespace CryptoAnalysatorWebApp
 
         public static ExchangePair GetCrossByMarket(string market, string purchasePath, string sellPath) {
             foreach (ExchangePair crossByMarket in _timeUpdatedCrossesByMarket.Keys) {
-                Console.WriteLine($"CBM   {crossByMarket.Market}  {crossByMarket.PurchasePath}  {crossByMarket.SellPath}");
-                if (crossByMarket.Market.ToLower() == market && crossByMarket.PurchasePath.ToLower() == purchasePath && 
-                        crossByMarket.SellPath.ToLower() == sellPath) {
+                if (crossByMarket.Market == market && crossByMarket.PurchasePath == purchasePath && 
+                        crossByMarket.SellPath == sellPath) {
                     return crossByMarket;
                 }
             }

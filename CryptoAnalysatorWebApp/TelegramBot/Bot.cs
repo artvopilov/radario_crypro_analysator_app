@@ -54,13 +54,13 @@ namespace CryptoAnalysatorWebApp.TelegramBot
             while (true) {
                 string message = "";
 
-                Console.WriteLine($"Bot Works In Channel");
+                //Console.WriteLine($"Bot Works In Channel");
                 PairsAnalysator pairsAnalysator = new PairsAnalysator();
 
                 BasicCryptoMarket[] marketsArray = { new PoloniexMarket(), new BittrexMarket(), new ExmoMarket(), new BinanceMarket() };
                 pairsAnalysator.FindActualPairsAndCrossRates(marketsArray, "bot");
 
-                Console.WriteLine("ANALYSED");
+                //Console.WriteLine("ANALYSED");
 
                 Dictionary<string, List<ExchangePair>> pairsDic = new Dictionary<string, List<ExchangePair>>();
                 pairsDic["crosses"] = pairsAnalysator.CrossPairs.OrderByDescending(p => p.Spread).ToList();
@@ -70,8 +70,8 @@ namespace CryptoAnalysatorWebApp.TelegramBot
                 TimeService.StoreTime(DateTime.Now, pairsDic["pairs"].ToList(), pairsDic["crosses"].ToList(), pairsDic["crossesbymarket"]);
 
 
-                DateTime timeP = TimeService.TimePairs.Max(tp => tp.Value);
-                DateTime timeC = TimeService.TimeCrosses.Max(tp => tp.Value);
+                DateTime timeP = TimeService.TimePairs.Count > 0 ? TimeService.TimePairs.Max(tp => tp.Value) : DateTime.Now;
+                DateTime timeC = TimeService.TimeCrosses.Count > 0 ? TimeService.TimeCrosses.Max(tp => tp.Value) : DateTime.Now;
                 DateTime timeCBM = TimeService.TimeCrossesByMarket.Count > 0 ? TimeService.TimeCrossesByMarket.Max(tp => tp.Value) : DateTime.Now;
 
                 maxDateTimePairs = timeP > maxDateTimePairs ? timeP : DateTime.Now;

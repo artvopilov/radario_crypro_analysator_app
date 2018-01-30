@@ -18,7 +18,6 @@ namespace CryptoAnalysatorWebApp.Controllers
 
         public ActualPairsController(PoloniexMarket poloniexMarket, BittrexMarket bittrexMarket, ExmoMarket exmoMarket, PairsAnalysator pairsAnalysator, BinanceMarket binanceMarket) {
             Console.WriteLine("HELLO FROM Controller");
-
             _exmoMarket = exmoMarket;
             _poloniexMarket = poloniexMarket;
             _bittrexMarket = bittrexMarket;
@@ -171,56 +170,59 @@ namespace CryptoAnalysatorWebApp.Controllers
             Dictionary<string, string> resDic = new Dictionary<string, string>();
             exchangePair = TimeService.GetCrossByMarket(market, purchasepath, sellpath);
             if (exchangePair == null) {
-                Console.WriteLine($"NUUUUULLLL {market}  {purchasepath}  {sellpath}");
                 resDic["result"] = "Not actual";
                 resDic["purchasePrice"] = $"{resPurchasePrice}";
                 resDic["sellPrice"] = $"{resSellPrice}";
                 return Ok(resDic);
             }
-
+            Console.WriteLine($" {market}  {purchasepath}  {sellpath}");
             try {
                 string[] devidedPurchasePath = purchasepath.ToUpper().Split('-').ToArray();
-                switch (market) {
+                switch (market.ToLower()) {
                     case "poloniex":
-                        for (int i = 0; i < devidedPurchasePath.Length - 1; i++) {
+                        for (int i = 0; i <= devidedPurchasePath.Length - 2; i++) {
                             resPurchasePrice *= _poloniexMarket.LoadOrder($"{devidedPurchasePath[i]}-{devidedPurchasePath[i + 1]}", true);
                         }
                         break;
                     case "bittrex":
-                        for (int i = 0; i < devidedPurchasePath.Length - 1; i++) {
+                        for (int i = 0; i <= devidedPurchasePath.Length - 2; i++) {
                             resPurchasePrice *= _bittrexMarket.LoadOrder($"{devidedPurchasePath[i]}-{devidedPurchasePath[i + 1]}", true);
                         }
                         break;
                     case "exmo":
-                        for (int i = 0; i < devidedPurchasePath.Length - 1; i++) {
+                        for (int i = 0; i <= devidedPurchasePath.Length - 2; i++) {
                             resPurchasePrice *= _exmoMarket.LoadOrder($"{devidedPurchasePath[i]}-{devidedPurchasePath[i + 1]}", true);
                         }
                         break;
                     case "binance":
-                        for (int i = 0; i < devidedPurchasePath.Length - 1; i++) {
+                        for (int i = 0; i <= devidedPurchasePath.Length - 2; i++) {
                             resPurchasePrice *= _binanceMarket.LoadOrder($"{devidedPurchasePath[i]}-{devidedPurchasePath[i + 1]}", true);
                         }
                         break;
                 }
                 string[] devidedSellPath = sellpath.ToUpper().Split('-').ToArray();
-                switch (market) {
+                switch (market.ToLower()) {
                     case "poloniex":
-                        for (int i = devidedPurchasePath.Length; i > 0; i--) {
+                        for (int i = devidedPurchasePath.Length - 1; i > 0; i--) {
+                            Console.WriteLine("GO ON");
                             resSellPrice *= _poloniexMarket.LoadOrder($"{devidedPurchasePath[i - 1]}-{devidedPurchasePath[i]}", false, true);
                         }
                         break;
                     case "bittrex":
-                        for (int i = devidedPurchasePath.Length; i > 0; i--) {
+                        for (int i = devidedPurchasePath.Length - 1; i > 0; i--) {
+                            Console.WriteLine("GO ON");
                             resSellPrice *= _binanceMarket.LoadOrder($"{devidedPurchasePath[i - 1]}-{devidedPurchasePath[i]}", false, true);
                         }
                         break;
                     case "exmo":
-                        for (int i = devidedPurchasePath.Length; i > 0; i--) {
+                        for (int i = devidedPurchasePath.Length - 1; i > 0; i--) {
+                            Console.WriteLine("GO ON");
                             resSellPrice *= _exmoMarket.LoadOrder($"{devidedPurchasePath[i - 1]}-{devidedPurchasePath[i]}", false, true);
                         }
                         break;
                     case "binance":
-                        for (int i = devidedPurchasePath.Length; i > 0; i--) {
+                        for (int i = devidedPurchasePath.Length - 1; i > 0; i--) {
+                            Console.WriteLine("GO ON");
                             resSellPrice *= _binanceMarket.LoadOrder($"{devidedPurchasePath[i - 1]}-{devidedPurchasePath[i]}", false, true);
                         }
                         break;
@@ -228,8 +230,9 @@ namespace CryptoAnalysatorWebApp.Controllers
 
                 newSpread = Math.Round((resSellPrice - resPurchasePrice) / resPurchasePrice * 100, 4);
             } catch (Exception e) {
-                Console.WriteLine("Loading order failed");
+                Console.WriteLine("Loading order failed (crossByMarket)");
                 Console.WriteLine(e.Message);
+                Console.WriteLine(e.StackTrace);
             }
 
             bool pricesAreOk = newSpread > 0 ? true : false;

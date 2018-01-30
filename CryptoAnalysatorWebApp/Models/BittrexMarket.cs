@@ -31,7 +31,7 @@ namespace CryptoAnalysatorWebApp.Models
         }
 
         public override decimal LoadOrder(string currencyPair, bool isSeller, bool reversePice = false) {
-            if (_pairs[currencyPair] == null) {
+            if (!_pairs.ContainsKey(currencyPair)) {
                 currencyPair = $"{currencyPair.Split('-')[1]}-{currencyPair.Split('-')[0]}";
                 isSeller = isSeller == true ? false : true;
                 reversePice = reversePice == true ? false : true;
@@ -41,6 +41,7 @@ namespace CryptoAnalysatorWebApp.Models
             string response = GetResponse(query);
             
             JToken responseJson = JObject.Parse(response)["result"];
+            Console.WriteLine("AAAAAAAAABBBBBBBBB");
             if (isSeller) {
                 if (reversePice) {
                     return 1 / (decimal)responseJson["sell"][0]["Rate"] * (1 + _feeTaker);

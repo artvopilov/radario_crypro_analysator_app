@@ -781,6 +781,41 @@ module.exports = invariant;
 /* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
+/* WEBPACK VAR INJECTION */(function(process) {/**
+ * Copyright (c) 2013-present, Facebook, Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+if (process.env.NODE_ENV !== 'production') {
+  var REACT_ELEMENT_TYPE = (typeof Symbol === 'function' &&
+    Symbol.for &&
+    Symbol.for('react.element')) ||
+    0xeac7;
+
+  var isValidElement = function(object) {
+    return typeof object === 'object' &&
+      object !== null &&
+      object.$$typeof === REACT_ELEMENT_TYPE;
+  };
+
+  // By explicitly using `prop-types` you are opting into new development behavior.
+  // http://fb.me/prop-types-in-prod
+  var throwOnDirectAccess = true;
+  module.exports = __webpack_require__(58)(isValidElement, throwOnDirectAccess);
+} else {
+  // By explicitly using `prop-types` you are opting into new production behavior.
+  // http://fb.me/prop-types-in-prod
+  module.exports = __webpack_require__(59)();
+}
+
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
 "use strict";
 /* WEBPACK VAR INJECTION */(function(process) {/**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -802,7 +837,7 @@ module.exports = emptyObject;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -871,41 +906,6 @@ module.exports = warning;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 8 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/* WEBPACK VAR INJECTION */(function(process) {/**
- * Copyright (c) 2013-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-if (process.env.NODE_ENV !== 'production') {
-  var REACT_ELEMENT_TYPE = (typeof Symbol === 'function' &&
-    Symbol.for &&
-    Symbol.for('react.element')) ||
-    0xeac7;
-
-  var isValidElement = function(object) {
-    return typeof object === 'object' &&
-      object !== null &&
-      object.$$typeof === REACT_ELEMENT_TYPE;
-  };
-
-  // By explicitly using `prop-types` you are opting into new development behavior.
-  // http://fb.me/prop-types-in-prod
-  var throwOnDirectAccess = true;
-  module.exports = __webpack_require__(58)(isValidElement, throwOnDirectAccess);
-} else {
-  // By explicitly using `prop-types` you are opting into new production behavior.
-  // http://fb.me/prop-types-in-prod
-  module.exports = __webpack_require__(59)();
-}
-
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
-
-/***/ }),
 /* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -921,7 +921,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 if (process.env.NODE_ENV !== 'production') {
   var invariant = __webpack_require__(5);
-  var warning = __webpack_require__(7);
+  var warning = __webpack_require__(8);
   var ReactPropTypesSecret = __webpack_require__(10);
   var loggedTypeFailures = {};
 }
@@ -993,6 +993,12 @@ module.exports = ReactPropTypesSecret;
 
 /***/ }),
 /* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = __webpack_require__(38);
+
+/***/ }),
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1092,7 +1098,7 @@ module.exports = defaults;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1131,7 +1137,7 @@ var ExecutionEnvironment = {
 module.exports = ExecutionEnvironment;
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1212,7 +1218,7 @@ module.exports = EventListener;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1254,7 +1260,7 @@ function getActiveElement(doc) /*?DOMElement*/{
 module.exports = getActiveElement;
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1325,7 +1331,7 @@ function shallowEqual(objA, objB) {
 module.exports = shallowEqual;
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1368,7 +1374,7 @@ function containsNode(outerNode, innerNode) {
 module.exports = containsNode;
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1396,12 +1402,6 @@ function focusNode(node) {
 }
 
 module.exports = focusNode;
-
-/***/ }),
-/* 18 */
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = __webpack_require__(38);
 
 /***/ }),
 /* 19 */
@@ -1707,7 +1707,7 @@ ReactDom.render(React.createElement(App, null), document.getElementById('main'))
  * LICENSE file in the root directory of this source tree.
  */
 
-var m=__webpack_require__(4),n=__webpack_require__(6),p=__webpack_require__(3),q="function"===typeof Symbol&&Symbol["for"],r=q?Symbol["for"]("react.element"):60103,t=q?Symbol["for"]("react.call"):60104,u=q?Symbol["for"]("react.return"):60105,v=q?Symbol["for"]("react.portal"):60106,w=q?Symbol["for"]("react.fragment"):60107,x="function"===typeof Symbol&&Symbol.iterator;
+var m=__webpack_require__(4),n=__webpack_require__(7),p=__webpack_require__(3),q="function"===typeof Symbol&&Symbol["for"],r=q?Symbol["for"]("react.element"):60103,t=q?Symbol["for"]("react.call"):60104,u=q?Symbol["for"]("react.return"):60105,v=q?Symbol["for"]("react.portal"):60106,w=q?Symbol["for"]("react.fragment"):60107,x="function"===typeof Symbol&&Symbol.iterator;
 function y(a){for(var b=arguments.length-1,e="Minified React error #"+a+"; visit http://facebook.github.io/react/docs/error-decoder.html?invariant\x3d"+a,c=0;c<b;c++)e+="\x26args[]\x3d"+encodeURIComponent(arguments[c+1]);b=Error(e+" for the full message or use the non-minified dev environment for full errors and additional helpful warnings.");b.name="Invariant Violation";b.framesToPop=1;throw b;}
 var z={isMounted:function(){return!1},enqueueForceUpdate:function(){},enqueueReplaceState:function(){},enqueueSetState:function(){}};function A(a,b,e){this.props=a;this.context=b;this.refs=n;this.updater=e||z}A.prototype.isReactComponent={};A.prototype.setState=function(a,b){"object"!==typeof a&&"function"!==typeof a&&null!=a?y("85"):void 0;this.updater.enqueueSetState(this,a,b,"setState")};A.prototype.forceUpdate=function(a){this.updater.enqueueForceUpdate(this,a,"forceUpdate")};
 function B(a,b,e){this.props=a;this.context=b;this.refs=n;this.updater=e||z}function C(){}C.prototype=A.prototype;var D=B.prototype=new C;D.constructor=B;m(D,A.prototype);D.isPureReactComponent=!0;function E(a,b,e){this.props=a;this.context=b;this.refs=n;this.updater=e||z}var F=E.prototype=new C;F.constructor=E;m(F,A.prototype);F.unstable_isAsyncReactComponent=!0;F.render=function(){return this.props.children};var G={current:null},H=Object.prototype.hasOwnProperty,I={key:!0,ref:!0,__self:!0,__source:!0};
@@ -1744,9 +1744,9 @@ if (process.env.NODE_ENV !== "production") {
 'use strict';
 
 var _assign = __webpack_require__(4);
-var emptyObject = __webpack_require__(6);
+var emptyObject = __webpack_require__(7);
 var invariant = __webpack_require__(5);
-var warning = __webpack_require__(7);
+var warning = __webpack_require__(8);
 var emptyFunction = __webpack_require__(3);
 var checkPropTypes = __webpack_require__(9);
 
@@ -3149,7 +3149,7 @@ if (process.env.NODE_ENV === 'production') {
 /*
  Modernizr 3.0.0pre (Custom Build) | MIT
 */
-var aa=__webpack_require__(2),l=__webpack_require__(12),B=__webpack_require__(4),C=__webpack_require__(3),ba=__webpack_require__(13),da=__webpack_require__(14),ea=__webpack_require__(15),fa=__webpack_require__(16),ia=__webpack_require__(17),D=__webpack_require__(6);
+var aa=__webpack_require__(2),l=__webpack_require__(13),B=__webpack_require__(4),C=__webpack_require__(3),ba=__webpack_require__(14),da=__webpack_require__(15),ea=__webpack_require__(16),fa=__webpack_require__(17),ia=__webpack_require__(18),D=__webpack_require__(7);
 function E(a){for(var b=arguments.length-1,c="Minified React error #"+a+"; visit http://facebook.github.io/react/docs/error-decoder.html?invariant\x3d"+a,d=0;d<b;d++)c+="\x26args[]\x3d"+encodeURIComponent(arguments[d+1]);b=Error(c+" for the full message or use the non-minified dev environment for full errors and additional helpful warnings.");b.name="Invariant Violation";b.framesToPop=1;throw b;}aa?void 0:E("227");
 var oa={children:!0,dangerouslySetInnerHTML:!0,defaultValue:!0,defaultChecked:!0,innerHTML:!0,suppressContentEditableWarning:!0,suppressHydrationWarning:!0,style:!0};function pa(a,b){return(a&b)===b}
 var ta={MUST_USE_PROPERTY:1,HAS_BOOLEAN_VALUE:4,HAS_NUMERIC_VALUE:8,HAS_POSITIVE_NUMERIC_VALUE:24,HAS_OVERLOADED_BOOLEAN_VALUE:32,HAS_STRING_BOOLEAN_VALUE:64,injectDOMPropertyConfig:function(a){var b=ta,c=a.Properties||{},d=a.DOMAttributeNamespaces||{},e=a.DOMAttributeNames||{};a=a.DOMMutationMethods||{};for(var f in c){ua.hasOwnProperty(f)?E("48",f):void 0;var g=f.toLowerCase(),h=c[f];g={attributeName:g,attributeNamespace:null,propertyName:f,mutationMethod:null,mustUseProperty:pa(h,b.MUST_USE_PROPERTY),
@@ -3448,16 +3448,16 @@ if (process.env.NODE_ENV !== "production") {
 
 var React = __webpack_require__(2);
 var invariant = __webpack_require__(5);
-var warning = __webpack_require__(7);
-var ExecutionEnvironment = __webpack_require__(12);
+var warning = __webpack_require__(8);
+var ExecutionEnvironment = __webpack_require__(13);
 var _assign = __webpack_require__(4);
 var emptyFunction = __webpack_require__(3);
-var EventListener = __webpack_require__(13);
-var getActiveElement = __webpack_require__(14);
-var shallowEqual = __webpack_require__(15);
-var containsNode = __webpack_require__(16);
-var focusNode = __webpack_require__(17);
-var emptyObject = __webpack_require__(6);
+var EventListener = __webpack_require__(14);
+var getActiveElement = __webpack_require__(15);
+var shallowEqual = __webpack_require__(16);
+var containsNode = __webpack_require__(17);
+var focusNode = __webpack_require__(18);
+var emptyObject = __webpack_require__(7);
 var checkPropTypes = __webpack_require__(9);
 var hyphenateStyleName = __webpack_require__(33);
 var camelizeStyleName = __webpack_require__(35);
@@ -18998,12 +18998,12 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var React = __webpack_require__(2);
-var axios = __webpack_require__(18);
+var axios = __webpack_require__(11);
 
 var StatusBar = __webpack_require__(56);
 var ActualPairs = __webpack_require__(57);
 var ActualCrossesByMarket = __webpack_require__(61);
-var Tools = __webpack_require__(62);
+var Tools = __webpack_require__(63);
 
 var App = function (_React$Component) {
     _inherits(App, _React$Component);
@@ -19093,7 +19093,7 @@ module.exports = App;
 var utils = __webpack_require__(1);
 var bind = __webpack_require__(19);
 var Axios = __webpack_require__(40);
-var defaults = __webpack_require__(11);
+var defaults = __webpack_require__(12);
 
 /**
  * Create an instance of Axios
@@ -19176,7 +19176,7 @@ function isSlowBuffer (obj) {
 "use strict";
 
 
-var defaults = __webpack_require__(11);
+var defaults = __webpack_require__(12);
 var utils = __webpack_require__(1);
 var InterceptorManager = __webpack_require__(49);
 var dispatchRequest = __webpack_require__(50);
@@ -19717,7 +19717,7 @@ module.exports = InterceptorManager;
 var utils = __webpack_require__(1);
 var transformData = __webpack_require__(51);
 var isCancel = __webpack_require__(22);
-var defaults = __webpack_require__(11);
+var defaults = __webpack_require__(12);
 var isAbsoluteURL = __webpack_require__(52);
 var combineURLs = __webpack_require__(53);
 
@@ -20036,7 +20036,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var React = __webpack_require__(2);
-var PropTypes = __webpack_require__(8);
+var PropTypes = __webpack_require__(6);
 
 var PairInfo = __webpack_require__(60);
 
@@ -20133,7 +20133,7 @@ module.exports = ActualPairs;
 
 var emptyFunction = __webpack_require__(3);
 var invariant = __webpack_require__(5);
-var warning = __webpack_require__(7);
+var warning = __webpack_require__(8);
 var assign = __webpack_require__(4);
 
 var ReactPropTypesSecret = __webpack_require__(10);
@@ -20748,8 +20748,8 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var React = __webpack_require__(2);
-var PropTypes = __webpack_require__(8);
-var axios = __webpack_require__(18);
+var PropTypes = __webpack_require__(6);
+var axios = __webpack_require__(11);
 
 var PairInfo = function (_React$Component) {
     _inherits(PairInfo, _React$Component);
@@ -20892,9 +20892,9 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var React = __webpack_require__(2);
-var PropTypes = __webpack_require__(8);
+var PropTypes = __webpack_require__(6);
 
-var CrossInfo = __webpack_require__(!(function webpackMissingModule() { var e = new Error("Cannot find module \"./CrossInfo\""); e.code = 'MODULE_NOT_FOUND'; throw e; }()));
+var CrossInfo = __webpack_require__(62);
 
 var ActualCrossesByMarket = function (_React$Component) {
     _inherits(ActualCrossesByMarket, _React$Component);
@@ -20989,7 +20989,151 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var React = __webpack_require__(2);
-var PropTypes = __webpack_require__(8);;
+var PropTypes = __webpack_require__(6);
+var axios = __webpack_require__(11);
+
+var CrossInfo = function (_React$Component) {
+    _inherits(CrossInfo, _React$Component);
+
+    function CrossInfo(props) {
+        _classCallCheck(this, CrossInfo);
+
+        var _this = _possibleConstructorReturn(this, (CrossInfo.__proto__ || Object.getPrototypeOf(CrossInfo)).call(this, props));
+
+        _this.state = {
+            market: _this.props.market,
+            purchasePath: _this.props.purchasePath,
+            sellPath: _this.props.sellPath,
+            relevance: null,
+            purchasePrice: _this.props.purchasePrice,
+            sellPrice: _this.props.sellPrice,
+            spread: parseFloat(_this.props.spread),
+            spreadClasses: ["spread"]
+        };
+        return _this;
+    }
+
+    _createClass(CrossInfo, [{
+        key: 'updateRelevance',
+        value: function updateRelevance(e) {
+            var _this2 = this;
+
+            e.preventDefault();
+            var btn = e.target;
+            btn.classList.add('loading');
+            axios.get(this.props.url).then(function (response) {
+                console.log("track");
+                btn.classList.remove('loading');
+                var respData = response.data;
+                var relevance = respData.result === "Ok" ? respData.time : respData.result;
+                var purchasePrice = respData.result === "Ok" ? respData.purchasePrice : "";
+                var sellPrice = respData.result === "Ok" ? respData.sellPrice : "";
+                var spread = respData.result === "Ok" ? parseFloat(respData.spread.replace(',', '.')) : "";
+                var spreadClasses = void 0;
+                if (spread === "" || spread === _this2.state.spread) {
+                    spreadClasses = ["spread"];
+                } else {
+                    spreadClasses = spread > _this2.state.spread ? ["spread", "upp"] : ["spread", "down"];
+                }
+
+                _this2.setState({ relevance: relevance, purchasePrice: purchasePrice, sellPrice: sellPrice, spread: spread, spreadClasses: spreadClasses });
+            });
+        }
+    }, {
+        key: 'componentWillReceiveProps',
+        value: function componentWillReceiveProps(props) {
+            this.setState({
+                relevance: null,
+                purchasePrice: props.purchasePrice,
+                sellPrice: props.sellPrice,
+                spread: parseFloat(props.spread),
+                spreadClasses: ["spread"]
+            });
+        }
+    }, {
+        key: 'render',
+        value: function render() {
+            var _this3 = this;
+
+            return React.createElement(
+                'tr',
+                null,
+                React.createElement(
+                    'td',
+                    { className: 'market' },
+                    this.props.market
+                ),
+                React.createElement(
+                    'td',
+                    { className: 'buy' },
+                    this.props.purchasePath + ':  ' + this.state.purchasePrice
+                ),
+                React.createElement(
+                    'td',
+                    { className: 'sell' },
+                    this.props.sellPath + ':  ' + this.state.sellPrice
+                ),
+                React.createElement(
+                    'td',
+                    { className: this.state.spreadClasses.join(' ') },
+                    this.state.spread,
+                    '%'
+                ),
+                React.createElement(
+                    'td',
+                    { className: 'special' },
+                    this.props.isCross ? "Cross" : "",
+                    ' ',
+                    this.state.spread > 8 ? "Chance" : ""
+                ),
+                React.createElement(
+                    'td',
+                    { className: 'relevance' },
+                    React.createElement(
+                        'button',
+                        { className: 'trackBtn', 'data-label': 'Track', onClick: function onClick(e) {
+                                return _this3.updateRelevance.bind(_this3)(e);
+                            } },
+                        'Track'
+                    ),
+                    this.state.relevance
+                )
+            );
+        }
+    }]);
+
+    return CrossInfo;
+}(React.Component);
+
+CrossInfo.proptypes = {
+    market: PropTypes.string,
+    purchasePath: PropTypes.string,
+    sellPath: PropTypes.string,
+    isCross: PropTypes.bool,
+    purchasePrice: PropTypes.number,
+    sellPrice: PropTypes.number,
+    relevance: PropTypes.any
+};
+
+module.exports = CrossInfo;
+
+/***/ }),
+/* 63 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var React = __webpack_require__(2);
+var PropTypes = __webpack_require__(6);;
 
 var Tools = function (_React$Component) {
     _inherits(Tools, _React$Component);
