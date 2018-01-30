@@ -205,25 +205,25 @@ namespace CryptoAnalysatorWebApp.Controllers
                     case "poloniex":
                         for (int i = devidedPurchasePath.Length - 1; i > 0; i--) {
                             Console.WriteLine("GO ON");
-                            resSellPrice *= _poloniexMarket.LoadOrder($"{devidedPurchasePath[i - 1]}-{devidedPurchasePath[i]}", false, true);
+                            resSellPrice *= _poloniexMarket.LoadOrder($"{devidedPurchasePath[i - 1]}-{devidedPurchasePath[i]}", false, false);
                         }
                         break;
                     case "bittrex":
                         for (int i = devidedPurchasePath.Length - 1; i > 0; i--) {
                             Console.WriteLine("GO ON");
-                            resSellPrice *= _binanceMarket.LoadOrder($"{devidedPurchasePath[i - 1]}-{devidedPurchasePath[i]}", false, true);
+                            resSellPrice *= _binanceMarket.LoadOrder($"{devidedPurchasePath[i - 1]}-{devidedPurchasePath[i]}", false, false);
                         }
                         break;
                     case "exmo":
                         for (int i = devidedPurchasePath.Length - 1; i > 0; i--) {
                             Console.WriteLine("GO ON");
-                            resSellPrice *= _exmoMarket.LoadOrder($"{devidedPurchasePath[i - 1]}-{devidedPurchasePath[i]}", false, true);
+                            resSellPrice *= _exmoMarket.LoadOrder($"{devidedPurchasePath[i - 1]}-{devidedPurchasePath[i]}", false, false);
                         }
                         break;
                     case "binance":
                         for (int i = devidedPurchasePath.Length - 1; i > 0; i--) {
                             Console.WriteLine("GO ON");
-                            resSellPrice *= _binanceMarket.LoadOrder($"{devidedPurchasePath[i - 1]}-{devidedPurchasePath[i]}", false, true);
+                            resSellPrice *= _binanceMarket.LoadOrder($"{devidedPurchasePath[i - 1]}-{devidedPurchasePath[i]}", false, false);
                         }
                         break;
                 }
