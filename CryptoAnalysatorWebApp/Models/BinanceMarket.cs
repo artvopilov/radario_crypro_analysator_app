@@ -7,8 +7,8 @@ namespace CryptoAnalysatorWebApp.Models
 {
     public class BinanceMarket : BasicCryptoMarket {
         public BinanceMarket(string url = "https://www.binance.com/api/v3/", string command = "ticker/bookTicker",
-            decimal feeTaker = (decimal)0.001, decimal feeMaker = (decimal)0.001, string orderBookCommand = "ticker/bookTicker") :
-            base(url, command, feeTaker, feeMaker, orderBookCommand) {
+            decimal feeTaker = (decimal)0.001, decimal feeMaker = (decimal)0.001, string orderBookCommand = "ticker/bookTicker", string marketName = "Binance") :
+            base(url, command, feeTaker, feeMaker, orderBookCommand, marketName) {
         }
 
         protected override void ProcessResponsePairs(string response) {
@@ -44,15 +44,27 @@ namespace CryptoAnalysatorWebApp.Models
             Console.WriteLine("[INFO] BinanceMarket is ready");
         }
 
-        public decimal LoadOrder(string currencyPair, bool isSeller) {
+        public override decimal LoadOrder(string currencyPair, bool isSeller, bool reversePice = false) {
+            if (_pairs[currencyPair] == null) {
+                currencyPair = $"{currencyPair.Split('-')[1]}-{currencyPair.Split('-')[0]}";
+                isSeller = isSeller == true ? false : true;
+                reversePice = reversePice == true ? false : true;
+            }
+
             string[] currencyPairSplited = currencyPair.Split('-');
             string query = _basicUrl + _orderBookCommand + $"?symbol={currencyPairSplited[1]}{currencyPairSplited[0]}";
             string response = GetResponse(query);
 
             JObject responseJson = JObject.Parse(response);
             if (isSeller) {
+                if (reversePice) {
+                    return 1 / (decimal)responseJson["askPrice"] * (1 + _feeTaker);
+                }
                 return (decimal)responseJson["askPrice"] * (1 + _feeTaker);
             } else {
+                if (reversePice) {
+                    return 1 / (decimal)responseJson["bidPrice"] * (1 - _feeMaker);
+                }
                 return (decimal)responseJson["bidPrice"] * (1 - _feeMaker);
             }
 

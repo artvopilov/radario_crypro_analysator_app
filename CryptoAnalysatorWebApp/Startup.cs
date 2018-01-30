@@ -38,12 +38,11 @@ namespace CryptoAnalysatorWebApp
             services.AddScoped<PoloniexMarket>();
             services.AddScoped<BinanceMarket>();
             services.AddScoped<PairsAnalysator>();
-
+                
             Bot.Get();
 
             Thread t1 = new Thread(Bot.StartChannelPosting);
             t1.Start();
-            //Bot.StartChannelPosting();
 
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddReact();

@@ -50,6 +50,7 @@ namespace CryptoAnalysatorWebApp.TelegramBot
 
             DateTime maxDateTimePairs = DateTime.Now;
             DateTime maxDateTimeCrosses = DateTime.Now;
+            DateTime maxDateTimeCrossesByMarket = DateTime.Now;
             while (true) {
                 string message = "";
 
@@ -64,25 +65,28 @@ namespace CryptoAnalysatorWebApp.TelegramBot
                 Dictionary<string, List<ExchangePair>> pairsDic = new Dictionary<string, List<ExchangePair>>();
                 pairsDic["crosses"] = pairsAnalysator.CrossPairs.OrderByDescending(p => p.Spread).ToList();
                 pairsDic["pairs"] = pairsAnalysator.ActualPairs.OrderByDescending(p => p.Spread).ToList();
+                pairsDic["crossesbymarket"] = pairsAnalysator.CrossRatesByMarket.OrderByDescending(p => p.Spread).ToList();
 
-                TimeService.StoreTime(DateTime.Now, pairsDic["pairs"].ToList(), pairsDic["crosses"].ToList());
+                TimeService.StoreTime(DateTime.Now, pairsDic["pairs"].ToList(), pairsDic["crosses"].ToList(), pairsDic["crossesbymarket"]);
 
 
                 DateTime timeP = TimeService.TimePairs.Max(tp => tp.Value);
                 DateTime timeC = TimeService.TimeCrosses.Max(tp => tp.Value);
+                DateTime timeCBM = TimeService.TimeCrossesByMarket.Count > 0 ? TimeService.TimeCrossesByMarket.Max(tp => tp.Value) : DateTime.Now;
 
                 maxDateTimePairs = timeP > maxDateTimePairs ? timeP : DateTime.Now;
                 maxDateTimeCrosses = timeC > maxDateTimeCrosses ? timeC : DateTime.Now;
+                maxDateTimeCrosses = timeCBM > maxDateTimeCrossesByMarket ? timeCBM: DateTime.Now;
 
                 int count = 0;
                 foreach (KeyValuePair<ExchangePair, DateTime> kvp in TimeService.TimePairs) {
-                    if (kvp.Value == maxDateTimePairs && count < 15) {
+                    if (kvp.Value == maxDateTimePairs && count < 10) {
                         ExchangePair exchangePair = kvp.Key;
 
                         if (exchangePair.Spread > 5) {
                             message += $"{count + 1}) {exchangePair.Pair}       {exchangePair.Spread}%\n" +
-                                $"{exchangePair.StockExchangeSeller.ToUpper()}({exchangePair.PurchasePrice}) -> " +
-                                $"{exchangePair.StockExchangeBuyer.ToUpper()}({exchangePair.SellPrice}) \n";
+                                $"{exchangePair.StockExchangeSeller} ({exchangePair.PurchasePrice}) -> " +
+                                $"{exchangePair.StockExchangeBuyer} ({exchangePair.SellPrice}) \n";
                             count++;
                         }
 
@@ -90,13 +94,25 @@ namespace CryptoAnalysatorWebApp.TelegramBot
                 }
 
                 foreach (KeyValuePair<ExchangePair, DateTime> kvp in TimeService.TimeCrosses) {
-                    if (kvp.Value == maxDateTimeCrosses && count < 30) {
+                    if (kvp.Value == maxDateTimeCrosses && count < 25) {
                         ExchangePair exchangePair = kvp.Key;
 
                         if (exchangePair.Spread > 5) {
                             message += $"{count + 1}) {exchangePair.Pair}       {exchangePair.Spread}%\n" +
                                 $"{exchangePair.StockExchangeSeller} ({exchangePair.PurchasePrice}) -> " +
                                 $"{exchangePair.StockExchangeBuyer} ({exchangePair.SellPrice}) \n";
+                            count++;
+                        }
+                    }
+                }
+
+                foreach (KeyValuePair<ExchangePair, DateTime> kvp in TimeService.TimeCrossesByMarket) {
+                    if (kvp.Value == maxDateTimeCrossesByMarket && count < 30) {
+                        ExchangePair exchangePair = kvp.Key;
+
+                        if (exchangePair.Spread > 5) {
+                            message += $"{count + 1})  -> {exchangePair.PurchasePath}  <- {exchangePair.SellPath}\n" +
+                                $"{exchangePair.Market}      ({exchangePair.Spread})%\n";
                             count++;
                         }
                     }

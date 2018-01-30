@@ -874,6 +874,41 @@ module.exports = warning;
 /* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
+/* WEBPACK VAR INJECTION */(function(process) {/**
+ * Copyright (c) 2013-present, Facebook, Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+if (process.env.NODE_ENV !== 'production') {
+  var REACT_ELEMENT_TYPE = (typeof Symbol === 'function' &&
+    Symbol.for &&
+    Symbol.for('react.element')) ||
+    0xeac7;
+
+  var isValidElement = function(object) {
+    return typeof object === 'object' &&
+      object !== null &&
+      object.$$typeof === REACT_ELEMENT_TYPE;
+  };
+
+  // By explicitly using `prop-types` you are opting into new development behavior.
+  // http://fb.me/prop-types-in-prod
+  var throwOnDirectAccess = true;
+  module.exports = __webpack_require__(58)(isValidElement, throwOnDirectAccess);
+} else {
+  // By explicitly using `prop-types` you are opting into new production behavior.
+  // http://fb.me/prop-types-in-prod
+  module.exports = __webpack_require__(59)();
+}
+
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+
+/***/ }),
+/* 9 */
+/***/ (function(module, exports, __webpack_require__) {
+
 "use strict";
 /* WEBPACK VAR INJECTION */(function(process) {/**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -887,7 +922,7 @@ module.exports = warning;
 if (process.env.NODE_ENV !== 'production') {
   var invariant = __webpack_require__(5);
   var warning = __webpack_require__(7);
-  var ReactPropTypesSecret = __webpack_require__(9);
+  var ReactPropTypesSecret = __webpack_require__(10);
   var loggedTypeFailures = {};
 }
 
@@ -938,7 +973,7 @@ module.exports = checkPropTypes;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -957,7 +992,7 @@ module.exports = ReactPropTypesSecret;
 
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1053,41 +1088,6 @@ utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
 });
 
 module.exports = defaults;
-
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
-
-/***/ }),
-/* 11 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/* WEBPACK VAR INJECTION */(function(process) {/**
- * Copyright (c) 2013-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-if (process.env.NODE_ENV !== 'production') {
-  var REACT_ELEMENT_TYPE = (typeof Symbol === 'function' &&
-    Symbol.for &&
-    Symbol.for('react.element')) ||
-    0xeac7;
-
-  var isValidElement = function(object) {
-    return typeof object === 'object' &&
-      object !== null &&
-      object.$$typeof === REACT_ELEMENT_TYPE;
-  };
-
-  // By explicitly using `prop-types` you are opting into new development behavior.
-  // http://fb.me/prop-types-in-prod
-  var throwOnDirectAccess = true;
-  module.exports = __webpack_require__(58)(isValidElement, throwOnDirectAccess);
-} else {
-  // By explicitly using `prop-types` you are opting into new production behavior.
-  // http://fb.me/prop-types-in-prod
-  module.exports = __webpack_require__(59)();
-}
 
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
@@ -1748,7 +1748,7 @@ var emptyObject = __webpack_require__(6);
 var invariant = __webpack_require__(5);
 var warning = __webpack_require__(7);
 var emptyFunction = __webpack_require__(3);
-var checkPropTypes = __webpack_require__(8);
+var checkPropTypes = __webpack_require__(9);
 
 // TODO: this is special because it gets imported during build.
 
@@ -3458,7 +3458,7 @@ var shallowEqual = __webpack_require__(15);
 var containsNode = __webpack_require__(16);
 var focusNode = __webpack_require__(17);
 var emptyObject = __webpack_require__(6);
-var checkPropTypes = __webpack_require__(8);
+var checkPropTypes = __webpack_require__(9);
 var hyphenateStyleName = __webpack_require__(33);
 var camelizeStyleName = __webpack_require__(35);
 
@@ -19002,7 +19002,8 @@ var axios = __webpack_require__(18);
 
 var StatusBar = __webpack_require__(56);
 var ActualPairs = __webpack_require__(57);
-var Tools = __webpack_require__(61);
+var ActualCrossesByMarket = __webpack_require__(61);
+var Tools = __webpack_require__(62);
 
 var App = function (_React$Component) {
     _inherits(App, _React$Component);
@@ -19014,6 +19015,7 @@ var App = function (_React$Component) {
 
         _this.state = {
             crosses: [],
+            crossesByMarket: [],
             pairs: [],
             filter: 0
         };
@@ -19044,8 +19046,9 @@ var App = function (_React$Component) {
                 }
                 var pairs = response.data.pairs;
                 var crosses = response.data.crosses;
+                var crossesByMarket = response.data.crossesbymarket;
 
-                _this2.setState({ pairs: pairs, crosses: crosses });
+                _this2.setState({ pairs: pairs, crosses: crosses, crossesByMarket: crossesByMarket });
             });
         }
     }, {
@@ -19064,7 +19067,13 @@ var App = function (_React$Component) {
                 React.createElement(StatusBar, null),
                 React.createElement(Tools, { onChangeFilter: this.onChangeFilter.bind(this), updatePairs: this.updatePairs.bind(this) }),
                 React.createElement(ActualPairs, { data: this.state.pairs, areCrosses: false, filter: this.state.filter }),
-                React.createElement(ActualPairs, { data: this.state.crosses, areCrosses: true, filter: this.state.filter })
+                React.createElement(ActualPairs, { data: this.state.crosses, areCrosses: true, filter: this.state.filter }),
+                React.createElement(
+                    'div',
+                    { className: 'crossesByMarketTitle' },
+                    '\u041A\u0440\u043E\u0441\u0441-\u043A\u0443\u0440\u0441\u044B \u0432\u043D\u0443\u0442\u0440\u0438 \u043E\u0434\u043D\u043E\u0439 \u0431\u0438\u0440\u0436\u0438'
+                ),
+                React.createElement(ActualCrossesByMarket, { data: this.state.crossesByMarket, areCrosses: true, filter: this.state.filter })
             );
         }
     }]);
@@ -19084,7 +19093,7 @@ module.exports = App;
 var utils = __webpack_require__(1);
 var bind = __webpack_require__(19);
 var Axios = __webpack_require__(40);
-var defaults = __webpack_require__(10);
+var defaults = __webpack_require__(11);
 
 /**
  * Create an instance of Axios
@@ -19167,7 +19176,7 @@ function isSlowBuffer (obj) {
 "use strict";
 
 
-var defaults = __webpack_require__(10);
+var defaults = __webpack_require__(11);
 var utils = __webpack_require__(1);
 var InterceptorManager = __webpack_require__(49);
 var dispatchRequest = __webpack_require__(50);
@@ -19708,7 +19717,7 @@ module.exports = InterceptorManager;
 var utils = __webpack_require__(1);
 var transformData = __webpack_require__(51);
 var isCancel = __webpack_require__(22);
-var defaults = __webpack_require__(10);
+var defaults = __webpack_require__(11);
 var isAbsoluteURL = __webpack_require__(52);
 var combineURLs = __webpack_require__(53);
 
@@ -20027,7 +20036,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var React = __webpack_require__(2);
-var PropTypes = __webpack_require__(11);
+var PropTypes = __webpack_require__(8);
 
 var PairInfo = __webpack_require__(60);
 
@@ -20127,8 +20136,8 @@ var invariant = __webpack_require__(5);
 var warning = __webpack_require__(7);
 var assign = __webpack_require__(4);
 
-var ReactPropTypesSecret = __webpack_require__(9);
-var checkPropTypes = __webpack_require__(8);
+var ReactPropTypesSecret = __webpack_require__(10);
+var checkPropTypes = __webpack_require__(9);
 
 module.exports = function(isValidElement, throwOnDirectAccess) {
   /* global Symbol */
@@ -20674,7 +20683,7 @@ module.exports = function(isValidElement, throwOnDirectAccess) {
 
 var emptyFunction = __webpack_require__(3);
 var invariant = __webpack_require__(5);
-var ReactPropTypesSecret = __webpack_require__(9);
+var ReactPropTypesSecret = __webpack_require__(10);
 
 module.exports = function() {
   function shim(props, propName, componentName, location, propFullName, secret) {
@@ -20739,7 +20748,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var React = __webpack_require__(2);
-var PropTypes = __webpack_require__(11);
+var PropTypes = __webpack_require__(8);
 var axios = __webpack_require__(18);
 
 var PairInfo = function (_React$Component) {
@@ -20883,7 +20892,104 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var React = __webpack_require__(2);
-var PropTypes = __webpack_require__(11);;
+var PropTypes = __webpack_require__(8);
+
+var CrossInfo = __webpack_require__(!(function webpackMissingModule() { var e = new Error("Cannot find module \"./CrossInfo\""); e.code = 'MODULE_NOT_FOUND'; throw e; }()));
+
+var ActualCrossesByMarket = function (_React$Component) {
+    _inherits(ActualCrossesByMarket, _React$Component);
+
+    function ActualCrossesByMarket(props) {
+        _classCallCheck(this, ActualCrossesByMarket);
+
+        return _possibleConstructorReturn(this, (ActualCrossesByMarket.__proto__ || Object.getPrototypeOf(ActualCrossesByMarket)).call(this, props));
+    }
+
+    _createClass(ActualCrossesByMarket, [{
+        key: 'render',
+        value: function render() {
+            var _this2 = this;
+
+            return React.createElement(
+                'table',
+                { className: 'pairsAndCrosses' },
+                React.createElement(
+                    'tr',
+                    null,
+                    React.createElement(
+                        'th',
+                        { className: 'market' },
+                        '\u0411\u0438\u0440\u0436\u0430'
+                    ),
+                    React.createElement(
+                        'th',
+                        { className: 'buy' },
+                        '\u041F\u043E\u043A\u0443\u043F\u043A\u0430'
+                    ),
+                    React.createElement(
+                        'th',
+                        { className: 'sell' },
+                        '\u041F\u0440\u043E\u0434\u0430\u0436\u0430'
+                    ),
+                    React.createElement(
+                        'th',
+                        { className: 'spread' },
+                        '\u041F\u0440\u043E\u0444\u0438\u0442'
+                    ),
+                    React.createElement(
+                        'th',
+                        { className: 'special' },
+                        '\u0421\u043F\u0435\u0446 \u043E\u0442\u043C\u0435\u0442\u043A\u0438'
+                    ),
+                    React.createElement(
+                        'th',
+                        { className: 'relevance' },
+                        '\u0410\u043A\u0442\u0443\u0430\u043B\u044C\u043D\u043E\u0441\u0442\u044C'
+                    )
+                ),
+                React.createElement(
+                    'tbody',
+                    null,
+                    this.props.data.filter(function (curPair) {
+                        return curPair.spread >= _this2.props.filter;
+                    }).map(function (curPair) {
+                        return React.createElement(CrossInfo, { market: curPair.market, purchasePath: curPair.purchasePath, sellPath: curPair.sellPath, spread: curPair.spread,
+                            purchasePrice: curPair.purchasePrice, sellPrice: curPair.sellPrice, isCross: _this2.props.areCrosses,
+                            url: '/api/actualpairs/crossMarket/' + curPair.market + '?purchasepath=' + curPair.purchasePath + '&sellpath=' + curPair.sellPath });
+                    })
+                )
+            );
+        }
+    }]);
+
+    return ActualCrossesByMarket;
+}(React.Component);
+
+ActualCrossesByMarket.proptypes = {
+    data: PropTypes.array,
+    areCrosses: PropTypes.bool,
+    filter: PropTypes.number
+};
+
+module.exports = ActualCrossesByMarket;
+
+/***/ }),
+/* 62 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var React = __webpack_require__(2);
+var PropTypes = __webpack_require__(8);;
 
 var Tools = function (_React$Component) {
     _inherits(Tools, _React$Component);

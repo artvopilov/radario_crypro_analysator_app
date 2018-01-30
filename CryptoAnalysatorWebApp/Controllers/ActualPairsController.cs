@@ -37,6 +37,7 @@ namespace CryptoAnalysatorWebApp.Controllers
             Dictionary<string, List<ExchangePair>> pairsDic = new Dictionary<string, List<ExchangePair>>();
             pairsDic["crosses"] = _pairsAnalysator.CrossPairs.OrderByDescending(p => p.Spread).ToList();
             pairsDic["pairs"] = _pairsAnalysator.ActualPairs.OrderByDescending(p => p.Spread).ToList();
+            pairsDic["crossesbymarket"] = _pairsAnalysator.CrossRatesByMarket.OrderByDescending(p => p.Spread).ToList();
 
             return Ok(pairsDic);
         }
@@ -98,7 +99,6 @@ namespace CryptoAnalysatorWebApp.Controllers
                         case "poloniex":
                             resPurchasePrice = _poloniexMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[2]}", true) /
                                 _poloniexMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[0]}", false);
-                            ;
                             break;
                         case "bittrex":
                             resPurchasePrice = _bittrexMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[2]}", true) /
@@ -157,6 +157,93 @@ namespace CryptoAnalysatorWebApp.Controllers
                 return Ok(resDic);
             }
 
+        }
+
+        // GET /api/actualpairs/crossMarket/poloniex?purchasepath=btc-ltc&sellpath=btc-eth-ltc
+        [HttpGet("crossMarket/{market}")]
+        [Produces("application/json")]
+        public IActionResult GetCrossByMarketRelevance (string market, [FromQuery]string purchasepath, [FromQuery]string sellpath) {
+            decimal resPurchasePrice = 1;
+            decimal resSellPrice = 1;
+            decimal newSpread = 0;
+            ExchangePair exchangePair;
+
+            Dictionary<string, string> resDic = new Dictionary<string, string>();
+            exchangePair = TimeService.GetCrossByMarket(market, purchasepath, sellpath);
+            if (exchangePair == null) {
+                Console.WriteLine($"NUUUUULLLL {market}  {purchasepath}  {sellpath}");
+                resDic["result"] = "Not actual";
+                resDic["purchasePrice"] = $"{resPurchasePrice}";
+                resDic["sellPrice"] = $"{resSellPrice}";
+                return Ok(resDic);
+            }
+
+            try {
+                string[] devidedPurchasePath = purchasepath.ToUpper().Split('-').ToArray();
+                switch (market) {
+                    case "poloniex":
+                        for (int i = 0; i < devidedPurchasePath.Length - 1; i++) {
+                            resPurchasePrice *= _poloniexMarket.LoadOrder($"{devidedPurchasePath[i]}-{devidedPurchasePath[i + 1]}", true);
+                        }
+                        break;
+                    case "bittrex":
+                        for (int i = 0; i < devidedPurchasePath.Length - 1; i++) {
+                            resPurchasePrice *= _bittrexMarket.LoadOrder($"{devidedPurchasePath[i]}-{devidedPurchasePath[i + 1]}", true);
+                        }
+                        break;
+                    case "exmo":
+                        for (int i = 0; i < devidedPurchasePath.Length - 1; i++) {
+                            resPurchasePrice *= _exmoMarket.LoadOrder($"{devidedPurchasePath[i]}-{devidedPurchasePath[i + 1]}", true);
+                        }
+                        break;
+                    case "binance":
+                        for (int i = 0; i < devidedPurchasePath.Length - 1; i++) {
+                            resPurchasePrice *= _binanceMarket.LoadOrder($"{devidedPurchasePath[i]}-{devidedPurchasePath[i + 1]}", true);
+                        }
+                        break;
+                }
+                string[] devidedSellPath = sellpath.ToUpper().Split('-').ToArray();
+                switch (market) {
+                    case "poloniex":
+                        for (int i = devidedPurchasePath.Length; i > 0; i--) {
+                            resSellPrice *= _poloniexMarket.LoadOrder($"{devidedPurchasePath[i - 1]}-{devidedPurchasePath[i]}", false, true);
+                        }
+                        break;
+                    case "bittrex":
+                        for (int i = devidedPurchasePath.Length; i > 0; i--) {
+                            resSellPrice *= _binanceMarket.LoadOrder($"{devidedPurchasePath[i - 1]}-{devidedPurchasePath[i]}", false, true);
+                        }
+                        break;
+                    case "exmo":
+                        for (int i = devidedPurchasePath.Length; i > 0; i--) {
+                            resSellPrice *= _exmoMarket.LoadOrder($"{devidedPurchasePath[i - 1]}-{devidedPurchasePath[i]}", false, true);
+                        }
+                        break;
+                    case "binance":
+                        for (int i = devidedPurchasePath.Length; i > 0; i--) {
+                            resSellPrice *= _binanceMarket.LoadOrder($"{devidedPurchasePath[i - 1]}-{devidedPurchasePath[i]}", false, true);
+                        }
+                        break;
+                }
+
+                newSpread = Math.Round((resSellPrice - resPurchasePrice) / resPurchasePrice * 100, 4);
+            } catch (Exception e) {
+                Console.WriteLine("Loading order failed");
+                Console.WriteLine(e.Message);
+            }
+
+            bool pricesAreOk = newSpread > 0 ? true : false;
+            if (pricesAreOk) {
+                resDic["result"] = "Ok";
+                resDic["time"] = $"{(DateTime.Now - TimeService.GetCrossByMarketTimeUpd(exchangePair))}";
+                resDic["purchasePrice"] = $"{Math.Round(resPurchasePrice, 11)}";
+                resDic["sellPrice"] = $"{Math.Round(resSellPrice, 11)}";
+                resDic["spread"] = Math.Round((resSellPrice - resPurchasePrice) / resPurchasePrice * 100, 4).ToString();
+                return Ok(resDic);
+            } else {
+                resDic["result"] = "Not actual (probably no orders)";
+                return Ok(resDic);
+            }
         }
 
         // POST api/values

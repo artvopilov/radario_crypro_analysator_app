@@ -6,8 +6,8 @@ namespace CryptoAnalysatorWebApp.Models
 {
     public class ExmoMarket : BasicCryptoMarket {
         public ExmoMarket(string url = "https://api.exmo.me/v1/", string command = "ticker",
-            decimal feeTaker = (decimal)0.002, decimal feeMaker = (decimal)0.002, string orderBookCommand = "order_book") :
-            base(url, command, feeTaker, feeMaker, orderBookCommand) {
+            decimal feeTaker = (decimal)0.002, decimal feeMaker = (decimal)0.002, string orderBookCommand = "order_book", string marketName = "Exmo") :
+            base(url, command, feeTaker, feeMaker, orderBookCommand, marketName) {
         }
 
         protected override void ProcessResponsePairs(string response) {
@@ -33,15 +33,27 @@ namespace CryptoAnalysatorWebApp.Models
             Console.WriteLine("[INFO] ExmoMarket is ready");
         }
 
-        public decimal LoadOrder(string currencyPair, bool isSeller) {
+        public override decimal LoadOrder(string currencyPair, bool isSeller, bool reversePice = false) {
+            if (_pairs[currencyPair] == null) {
+                currencyPair = $"{currencyPair.Split('-')[1]}-{currencyPair.Split('-')[0]}";
+                isSeller = isSeller == true ? false : true;
+                reversePice = reversePice == true ? false : true;
+            }
+
             currencyPair = currencyPair.Substring(currencyPair.IndexOf('-') + 1) + '_' + currencyPair.Substring(0, currencyPair.IndexOf('-'));
             string query = _basicUrl + _orderBookCommand + $"/?pair={currencyPair}";
             string response = GetResponse(query);
 
             JObject responseJson = JObject.Parse(response);
             if (isSeller) {
+                if (reversePice) {
+                    return 1 / (decimal)responseJson[currencyPair]["ask_top"] * (1 + _feeTaker);
+                }
                 return (decimal)responseJson[currencyPair]["ask_top"] * (1 + _feeTaker);
             } else {
+                if (reversePice) {
+                    return 1 / (decimal)responseJson[currencyPair]["bid_top"] * (1 - _feeMaker);
+                }
                 return (decimal)responseJson[currencyPair]["bid_top"] * (1 - _feeMaker);
             }
         }

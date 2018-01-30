@@ -82,6 +82,7 @@ html {
 .pairsAndCrosses {
     width: 80%;
     margin: 15px auto;
+	margin-bottom: 25px;
     border-radius: 3px;
     border-collapse: collapse;
 }
@@ -105,23 +106,26 @@ html {
     background-color: #f2f2f2;
 }
 
+.pairsAndCrosses .market {
+    width: 7%;
+}
+
 .pairsAndCrosses .pair {
     width: 11%;
-
 }
 
 .pairsAndCrosses .buy {
-    width: 18%;
+    width: 22%;
 
 }
 
 .pairsAndCrosses .sell {
-    width: 18%;
+    width: 22%;
 
 }
 
 .pairsAndCrosses .spread {
-    width: 15%;
+    width: 11%;
 }
 
 .upp {
@@ -212,4 +216,8 @@ html {
     -moz-transform:rotateX(180deg);
     -ms-transform:rotateX(180deg);
     transform:rotateX(180deg);
+}
+
+.crossesByMarketTitle {
+    text-align: center;
 }

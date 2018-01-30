@@ -3,6 +3,7 @@ const axios = require('axios');
 
 const StatusBar = require('./StatusBar');
 const ActualPairs = require('./ActualPairs');
+const ActualCrossesByMarket = require('./ActualCrossesByMarket');
 const Tools = require('./Tools');
 
 class App extends React.Component {
@@ -11,6 +12,7 @@ class App extends React.Component {
 
         this.state = {
             crosses: [],
+            crossesByMarket: [],
             pairs: [],
             filter: 0
         };
@@ -37,8 +39,9 @@ class App extends React.Component {
             }
                 const pairs = response.data.pairs;
                 const crosses = response.data.crosses;
+                const crossesByMarket = response.data.crossesbymarket;
 
-                this.setState({pairs, crosses});
+                this.setState({pairs, crosses, crossesByMarket});
             });
     }
 
@@ -54,8 +57,10 @@ class App extends React.Component {
                     <StatusBar/>
                     <Tools onChangeFilter={this.onChangeFilter.bind(this)} updatePairs={this.updatePairs.bind(this)}/>
                     <ActualPairs data={this.state.pairs} areCrosses={false} filter={this.state.filter}/>
-                    <ActualPairs data={this.state.crosses} areCrosses={true} filter={this.state.filter}/>
-                </div>
+					<ActualPairs data={this.state.crosses} areCrosses={true} filter={this.state.filter}/>
+                    <div className="crossesByMarketTitle">Кросс-курсы внутри одной биржи</div>
+					<ActualCrossesByMarket data={this.state.crossesByMarket} areCrosses={true} filter={this.state.filter}/>
+				</div>
         )
     }
 }

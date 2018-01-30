@@ -7,19 +7,24 @@ using CryptoAnalysatorWebApp.Interfaces;
 namespace CryptoAnalysatorWebApp.Models.Common
 {
     public abstract class BasicCryptoMarket: ICryptoMarket {
+        protected readonly string _marketName;
         protected readonly string _basicUrl;
         protected readonly string _orderBookCommand;
 
         protected Dictionary<string, ExchangePair> _pairs;
         protected Dictionary<string, ExchangePair> _crossRates;
+        protected List<string> _currencies;
 
+        public string MarketName { get => _marketName; }
         public Dictionary<string, ExchangePair> Pairs { get => _pairs; }
         public Dictionary<string, ExchangePair> Crosses { get => _crossRates; }
+        public List<string> Currencies { get => _currencies; }
 
         protected readonly decimal _feeTaker;
         protected readonly decimal _feeMaker;
 
-        public BasicCryptoMarket(string url, string command, decimal feeTaker, decimal feeMaker, string orderBookCommand) {
+        public BasicCryptoMarket(string url, string command, decimal feeTaker, decimal feeMaker, string orderBookCommand, string marketName) {
+            _marketName = marketName;
             _pairs = new Dictionary<string, ExchangePair>();
             _crossRates = new Dictionary<string, ExchangePair>();
             _basicUrl = url;
@@ -27,6 +32,7 @@ namespace CryptoAnalysatorWebApp.Models.Common
             _feeTaker = feeTaker;
             _feeMaker = feeMaker;
             LoadPairs(command);
+            CollectCurrencies();
         }
 
         public void LoadPairs(string command) {
@@ -38,6 +44,8 @@ namespace CryptoAnalysatorWebApp.Models.Common
                 Console.WriteLine(e.Message);
             }
         }
+
+        public abstract decimal LoadOrder(string currencyPair, bool isSeller, bool reversePice);
 
         protected abstract void ProcessResponsePairs(string response);
 
@@ -63,6 +71,20 @@ namespace CryptoAnalysatorWebApp.Models.Common
 
                         _crossRates.Add(crossRatePair.Pair.ToString(), crossRatePair);
                     }
+                }
+            }
+        }
+
+        protected void CollectCurrencies() {
+            _currencies = new List<string>();
+
+            foreach (string pair in _pairs.Keys) {
+                string[] splitedPair = pair.Split('-');
+                if (!_currencies.Contains(splitedPair[0])) {
+                    _currencies.Add(splitedPair[0]);
+                }
+                if (!_currencies.Contains(splitedPair[1])) {
+                    _currencies.Add(splitedPair[1]);
                 }
             }
         }
