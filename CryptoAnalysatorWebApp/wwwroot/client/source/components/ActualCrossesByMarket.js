@@ -26,7 +26,7 @@ class ActualCrossesByMarket extends React.Component {
                     }).map(curPair => {
                         return (
                             <CrossInfo market={curPair.market} purchasePath={curPair.purchasePath} sellPath={curPair.sellPath} spread={curPair.spread}
-                                      purchasePrice={curPair.purchasePrice} sellPrice={curPair.sellPrice} isCross={this.props.areCrosses}
+                                      purchasePrice={curPair.purchasePrice} sellPrice={curPair.sellPrice} isCross={curPair.isCross}
                                       url={`/api/actualpairs/crossMarket/${curPair.market}?purchasepath=${curPair.purchasePath}&sellpath=${curPair.sellPath}`}/>
                         )
                     })}

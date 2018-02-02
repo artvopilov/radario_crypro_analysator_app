@@ -13,11 +13,13 @@ namespace CryptoAnalysatorWebApp.Models.Common
 
         protected Dictionary<string, ExchangePair> _pairs;
         protected Dictionary<string, ExchangePair> _crossRates;
+        protected Dictionary<string, List<ExchangePair>> _crossRatesGroups;
         protected List<string> _currencies;
 
         public string MarketName { get => _marketName; }
         public Dictionary<string, ExchangePair> Pairs { get => _pairs; }
         public Dictionary<string, ExchangePair> Crosses { get => _crossRates; }
+        public Dictionary<string, List<ExchangePair>> CrossesGroups { get => _crossRatesGroups; }
         public List<string> Currencies { get => _currencies; }
 
         protected readonly decimal _feeTaker;
@@ -27,6 +29,7 @@ namespace CryptoAnalysatorWebApp.Models.Common
             _marketName = marketName;
             _pairs = new Dictionary<string, ExchangePair>();
             _crossRates = new Dictionary<string, ExchangePair>();
+            _crossRatesGroups = new Dictionary<string, List<ExchangePair>>();
             _basicUrl = url;
             _orderBookCommand = orderBookCommand;
             _feeTaker = feeTaker;
@@ -41,6 +44,7 @@ namespace CryptoAnalysatorWebApp.Models.Common
                 string response = GetResponse(_basicUrl + command);
                 ProcessResponsePairs(response);
             } catch (Exception e) {
+                Console.WriteLine("Error in ProcessResponsePairs" + this.MarketName);
                 Console.WriteLine(e.Message);
             }
         }
@@ -58,19 +62,44 @@ namespace CryptoAnalysatorWebApp.Models.Common
                     string[] splitedPair1 = pair1.Pair.Split(signsSplit);
                     string[] splitedPair2 = pair2.Pair.Split(signsSplit);
 
-                    bool crossFoundBefore = _crossRates.TryGetValue(splitedPair2[1] + '-' + splitedPair2[0] + '-' + splitedPair1[1], out ExchangePair value) ? true : false;
+                    bool crossFoundBefore = _crossRates.TryGetValue(splitedPair2[1] + '-' + splitedPair2[0] + '-' + splitedPair1[1], out ExchangePair value)  ? true : false;
+                    crossFoundBefore = crossFoundBefore == true ? true : _crossRates.TryGetValue(splitedPair1[1] + '-' + splitedPair2[0] + '-' + splitedPair2[1], out ExchangePair value_1) ? true : false;
                     if (crossFoundBefore) {
                         continue;
                     }
-
+                    
                     if (splitedPair1[0] == splitedPair2[0] && splitedPair1[1] != splitedPair2[1]) {
                         crossRatePair.Pair = splitedPair1[1] + '-' + splitedPair2[0] + '-' + splitedPair2[1];
                         crossRatePair.SellPrice = pair2.SellPrice / (pair1.PurchasePrice == 0 ? 1 : pair1.PurchasePrice);
                         crossRatePair.PurchasePrice = 1 / ((pair1.SellPrice == 0 ? 1 : pair1.SellPrice) / (pair2.PurchasePrice == 0 ? 1 : pair2.PurchasePrice));
                         crossRatePair.StockExchangeSeller = pair1.StockExchangeSeller;
 
+                        if (!_crossRatesGroups.ContainsKey(splitedPair1[1] + '-' + splitedPair2[1])) {
+                            _crossRatesGroups.Add(splitedPair1[1] + '-' + splitedPair2[1], new List<ExchangePair>());
+                        }
+                        _crossRatesGroups[splitedPair1[1] + '-' + splitedPair2[1]].Add(crossRatePair);
                         _crossRates.Add(crossRatePair.Pair.ToString(), crossRatePair);
                     }
+
+                    crossFoundBefore = _crossRates.TryGetValue(splitedPair1[0] + '-' + splitedPair2[0] + '-' + splitedPair2[1], out ExchangePair value2) ? true : false;
+                    crossFoundBefore = crossFoundBefore == true ? true : _crossRates.TryGetValue(splitedPair2[1] + '-' + splitedPair2[0] + '-' + splitedPair1[0], out ExchangePair value_2) ? true : false;
+                    if (crossFoundBefore) {
+                        continue;
+                    }
+
+                    if (splitedPair1[1] == splitedPair2[0]) {
+                        crossRatePair.Pair = splitedPair1[0] + '-' + splitedPair2[0] + '-' + splitedPair2[1];
+                        crossRatePair.PurchasePrice = pair1.PurchasePrice * pair2.PurchasePrice;
+                        crossRatePair.SellPrice = pair2.SellPrice * pair1.SellPrice;
+                        crossRatePair.StockExchangeSeller = pair1.StockExchangeSeller;
+
+                        if (!_crossRatesGroups.ContainsKey(splitedPair1[0] + '-' + splitedPair2[1])) {
+                            _crossRatesGroups.Add(splitedPair1[0] + '-' + splitedPair2[1], new List<ExchangePair>());
+                        }
+                        _crossRatesGroups[splitedPair1[0] + '-' + splitedPair2[1]].Add(crossRatePair);
+                        _crossRates.Add(crossRatePair.Pair.ToString(), crossRatePair);
+                    }
+
                 }
             }
         }
@@ -99,6 +128,10 @@ namespace CryptoAnalysatorWebApp.Models.Common
 
         public ExchangePair GetCrossByName(string name) {
             return _crossRates.TryGetValue(name, out ExchangePair value) ? value : null;
+        }
+
+        public ExchangePair[] GetSimilarCrosses(string Name) {
+            return _crossRatesGroups[Name.Split('-')[0] + '-' + Name.Split('-')[2]].ToArray();
         }
 
         public void DeletePairByName(string name) {

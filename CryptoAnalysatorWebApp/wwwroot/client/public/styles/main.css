@@ -27,27 +27,27 @@ html {
 }
 
 #tools {
-    display: inline-block;
-    width: 30%;
+    display: flex;
     margin-top: 40px;
     margin-bottom: 20px;
-    margin-left: 34%;
     height: 30px;
+    flex-flow: row wrap;
+    align-items: center;
+    justify-content: center;
+    align-content: center;
 }
 
 #tools label {
-    width: 20%;
     line-height: 100%;
     font-size: 20px;
     margin-right: 5px;
     color: #EA7500;
-    height: 100%;
     font-weight: bold;
 }
 
 #tools input {
     height: 24px;
-    width: 40%;
+    width: 100px;
     padding: 2px 6px;
     margin-right: 5px;
     border: 1px solid black;
@@ -62,7 +62,7 @@ html {
 #tools #updateBtn {
     margin-left: 10px;
     height: 100%;
-    width: 40%;
+    width: 200px;
     font-size: 18px;
     background-color: coral;
     border-radius: 5px;
@@ -218,6 +218,8 @@ html {
     transform:rotateX(180deg);
 }
 
-.crossesByMarketTitle {
+.tableTitle {
+    font-size: 22px;
+    font-family: "Garamond";
     text-align: center;
 }

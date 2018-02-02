@@ -13,7 +13,7 @@ class App extends React.Component {
         this.state = {
             crosses: [],
             crossesByMarket: [],
-            pairs: [],
+            pairsAndCrosses: [],
             filter: 0
         };
     }
@@ -37,11 +37,13 @@ class App extends React.Component {
                     btn.innerText = "Update";
                     btn.classList.remove('loading');
             }
-                const pairs = response.data.pairs;
-                const crosses = response.data.crosses;
+                const pairsAndCrosses = response.data.pairs.concat(response.data.crosses).sort((a, b) => {
+                    return b.spread - a.spread;
+                });
+                //const crosses = response.data.crosses;
                 const crossesByMarket = response.data.crossesbymarket;
 
-                this.setState({pairs, crosses, crossesByMarket});
+                this.setState({pairsAndCrosses, crossesByMarket});
             });
     }
 
@@ -56,9 +58,10 @@ class App extends React.Component {
                 <div id="app">
                     <StatusBar/>
                     <Tools onChangeFilter={this.onChangeFilter.bind(this)} updatePairs={this.updatePairs.bind(this)}/>
-                    <ActualPairs data={this.state.pairs} areCrosses={false} filter={this.state.filter}/>
-					<ActualPairs data={this.state.crosses} areCrosses={true} filter={this.state.filter}/>
-                    <div className="crossesByMarketTitle">Кросс-курсы внутри одной биржи</div>
+                    <div className="tableTitle"><h1>Арбитражные пары и кросс пары</h1></div>
+                    <ActualPairs data={this.state.pairsAndCrosses} filter={this.state.filter}/>
+					{/*<ActualPairs data={this.state.crosses} areCrosses={true} filter={this.state.filter}/>*/}
+                    <div className="tableTitle"><h1>Кросс-пары в рамках одной биржи</h1></div>
 					<ActualCrossesByMarket data={this.state.crossesByMarket} areCrosses={true} filter={this.state.filter}/>
 				</div>
         )

@@ -32,14 +32,17 @@ namespace CryptoAnalysatorWebApp.Models
             for (int i = 0; i < marketsArray.Length - 1; i++) {
                 foreach (ExchangePair thatMarketPair in marketsArray[i].Pairs.Values) {
                     ExchangePair pair = AnalysePairs(thatMarketPair, marketsArray, i);
-                    if (pair != null && _actualPairs.Find(p => p.Pair == pair.Pair && p.StockExchangeBuyer == pair.StockExchangeBuyer && p.StockExchangeSeller == pair.StockExchangeSeller) == null) {
+                    if (pair != null && _actualPairs.Find(p => p.Pair == pair.Pair && p.StockExchangeBuyer == pair.StockExchangeBuyer && p.StockExchangeSeller == pair.StockExchangeSeller) == null && pair.Spread > 4) {
+                        pair.IsCross = false;
                         _actualPairs.Add(pair);
                     }
                 }
 
                 foreach (ExchangePair thatMarketPair in marketsArray[i].Crosses.Values) {
+                    
                     ExchangePair crossRate = AnalysePairs(thatMarketPair, marketsArray, i, true);
-                    if (crossRate != null && _crossRates.Find(c => c.Pair == crossRate.Pair && c.StockExchangeBuyer == crossRate.StockExchangeBuyer && c.StockExchangeSeller == crossRate.StockExchangeSeller) == null) {
+                    if (crossRate != null && _crossRates.Find(c => c.Pair == crossRate.Pair && c.StockExchangeBuyer == crossRate.StockExchangeBuyer && c.StockExchangeSeller == crossRate.StockExchangeSeller) == null && crossRate.Spread > 4) {
+                        crossRate.IsCross = true;
                         _crossRates.Add(crossRate);
                     }
                 }
@@ -50,37 +53,80 @@ namespace CryptoAnalysatorWebApp.Models
             ExchangePair maxSellPricePair = thatMarketPair;
             ExchangePair minPurchasePricePair = thatMarketPair;
             ExchangePair actualPair = new ExchangePair();
+            string name = thatMarketPair.Pair;
 
+            if (isCross && marketsArray[i].GetSimilarCrosses(name).Length > 0) {
+                foreach (ExchangePair crossRate in marketsArray[i].GetSimilarCrosses(name)) {
+                    if (thatMarketPair.PurchasePrice < crossRate.SellPrice) {
+                        ExchangePair crossRatePair = new ExchangePair();
+                        crossRatePair.PurchasePath = thatMarketPair.Pair;
+                        crossRatePair.SellPath = crossRate.Pair;
+                        crossRatePair.Market = thatMarketPair.StockExchangeSeller;
+                        try {
+                            crossRatePair.PurchasePrice = thatMarketPair.PurchasePrice;
+                            crossRatePair.SellPrice = crossRate.SellPrice;
+                            if (crossRatePair.PurchasePrice > 0 && crossRatePair.SellPrice > 0) {
+                                crossRatePair.IsCross = true;
+                                crossRatePair.Spread = Math.Round((crossRatePair.SellPrice - crossRatePair.PurchasePrice) / crossRatePair.PurchasePrice * 100, 4);
+                                if (_crossRatesByMarket.Find(c => c.PurchasePath == crossRatePair.PurchasePath && c.SellPath == crossRatePair.SellPath && c.Market == crossRatePair.Market) == null) {
+                                    _crossRatesByMarket.Add(crossRatePair);
+                                }
+                            }
+                        } catch (Exception e) {
+                            //Console.WriteLine($"Exception! {e.Message}");
+                        }
+                    }
+                    if (crossRate.PurchasePrice < thatMarketPair.SellPrice) {
+                        ExchangePair crossRatePair = new ExchangePair();
+                        crossRatePair.PurchasePath = crossRate.Pair;
+                        crossRatePair.SellPath = thatMarketPair.Pair;
+                        crossRatePair.Market = thatMarketPair.StockExchangeSeller;
+                        try {
+                            crossRatePair.PurchasePrice = crossRate.PurchasePrice;
+                            crossRatePair.SellPrice = thatMarketPair.SellPrice;
+                            if (crossRatePair.PurchasePrice > 0 && crossRatePair.SellPrice > 0) {
+                                crossRatePair.IsCross = true;
+                                crossRatePair.Spread = Math.Round((crossRatePair.SellPrice - crossRatePair.PurchasePrice) / crossRatePair.PurchasePrice * 100, 4);
+                                if (_crossRatesByMarket.Find(c => c.PurchasePath == crossRatePair.PurchasePath && c.SellPath == crossRatePair.SellPath && c.Market == crossRatePair.Market) == null) {
+                                    _crossRatesByMarket.Add(crossRatePair);
+                                }
+                            }
+                        } catch (Exception e) {
+                            //Console.WriteLine($"Exception! {e.Message}");
+                        }
+                    }
+                }
+            }
             for (int j = i; j < marketsArray.Length; j++) {
-                string name = thatMarketPair.Pair;
                 ExchangePair anotherMarketPair;
 
                 if (isCross) {
                     anotherMarketPair = marketsArray[j].GetCrossByName(name);
                     if (anotherMarketPair == null) {
-                        anotherMarketPair = marketsArray[j].GetCrossByName(name.Substring(name.IndexOf('-') + 1) + '-'
-                            + name.Substring(0, name.IndexOf('-'))) ?? thatMarketPair;
-                        if (anotherMarketPair != thatMarketPair) {
+                        continue;
+                        //anotherMarketPair = marketsArray[j].GetCrossByName(name.Substring(name.IndexOf('-') + 1) + '-'
+                        //    + name.Substring(0, name.IndexOf('-'))) ?? thatMarketPair;
+                        //if (anotherMarketPair != thatMarketPair) {
 
-                            anotherMarketPair.Pair = name;
-                            decimal temp = anotherMarketPair.SellPrice;
-                            anotherMarketPair.SellPrice = 1 / anotherMarketPair.PurchasePrice;
-                            anotherMarketPair.PurchasePrice = 1 / temp;
-                        }
+                        //    anotherMarketPair.Pair = name;
+                        //    decimal temp = anotherMarketPair.SellPrice;
+                        //    anotherMarketPair.SellPrice = 1 / anotherMarketPair.PurchasePrice;
+                        //    anotherMarketPair.PurchasePrice = 1 / temp;
+                        //}
                     }
                 } else {
                     anotherMarketPair = marketsArray[j].GetPairByName(name);
                     if (anotherMarketPair == null) {
-    
-                        anotherMarketPair = marketsArray[j].GetPairByName(name.Substring(name.IndexOf('-') + 1) + '-'
-                            + name.Substring(0, name.IndexOf('-'))) ?? thatMarketPair;
-                        if (anotherMarketPair != thatMarketPair) {
+                        continue;
+                        //anotherMarketPair = marketsArray[j].GetPairByName(name.Substring(name.IndexOf('-') + 1) + '-'
+                        //    + name.Substring(0, name.IndexOf('-'))) ?? thatMarketPair;
+                        //if (anotherMarketPair != thatMarketPair) {
 
-                            anotherMarketPair.Pair = name;
-                            decimal temp = anotherMarketPair.SellPrice;
-                            anotherMarketPair.SellPrice = 1 / anotherMarketPair.PurchasePrice;
-                            anotherMarketPair.PurchasePrice = 1 / temp;
-                        }
+                        //    anotherMarketPair.Pair = name;
+                        //    decimal temp = anotherMarketPair.SellPrice;
+                        //    anotherMarketPair.SellPrice = 1 / anotherMarketPair.PurchasePrice;
+                        //    anotherMarketPair.PurchasePrice = 1 / temp;
+                        //}
                     }
                 }
 
@@ -149,8 +195,10 @@ namespace CryptoAnalysatorWebApp.Models
                 int index1 = market.Currencies.IndexOf(currencies[0]);
                 int index2 = market.Currencies.IndexOf(currencies[1]);
 
+                Console.WriteLine($"first:  {pair.Value.Pair}  {pair.Value.PurchasePrice} {pair.Value.SellPrice}");
                 currenciesMatrixPurchaseMin[index1, index2] = (double)pair.Value.PurchasePrice;
                 currenciesMatrixPurchaseMin[index2, index1] = (double)(1 / pair.Value.SellPrice);
+                Console.WriteLine($"{currencies[0]} {currencies[1]}  {currenciesMatrixPurchaseMin[index1, index2]}  {currenciesMatrixPurchaseMin[index2, index1]}");
 
                 currenciesMatrixSellMax[index1, index2] = (double)pair.Value.SellPrice;
                 currenciesMatrixSellMax[index2, index1] = (double)(1 / pair.Value.PurchasePrice);
@@ -176,21 +224,9 @@ namespace CryptoAnalysatorWebApp.Models
                     for (int j = 0; j < market.Currencies.Count; j++) {
                         if (i != j && visitedSellMax[i, j, k] != 1 && currenciesMatrixSellMax[i, j] - currenciesMatrixSellMax[i, k] * currenciesMatrixSellMax[k, j] < -0.000000000000000001) {
                             currenciesMatrixSellMax[i, j] = currenciesMatrixSellMax[i, k] * currenciesMatrixSellMax[k, j];
-                            if (currenciesMatrixPurchaseMin[i, j] == 1) {
-                                Console.WriteLine("Here in algorithm");
-                            }
                             visitedSellMax[i, j, k] = 1;
                             nextSell[i, j] = nextSell[k, j];
                         }
-                        //try {
-                        //    if (i != j && visitedSellMax[i, j, k] != 1 && currenciesMatrixSellMax[i, j] < currenciesMatrixSellMax[i, k] * currenciesMatrixSellMax[k, j]) {
-                        //        currenciesMatrixSellMax[i, j] = currenciesMatrixSellMax[i, k] * currenciesMatrixSellMax[k, j];
-                        //        visitedSellMax[i, j, k] = 1;
-                        //        nextSell[i, j] = nextSell[k, j];
-                        //    }
-                        //} catch (Exception e) {
-                        //    Console.WriteLine($"Exception in decimal: {e.Message}");
-                        //}
                     }
                 }
             }
@@ -211,10 +247,13 @@ namespace CryptoAnalysatorWebApp.Models
                             crossRatePair.PurchasePrice = (decimal)currenciesMatrixPurchaseMin[i, j];
                             crossRatePair.SellPrice = (decimal)currenciesMatrixSellMax[i, j];
                             if (crossRatePair.PurchasePrice > 0 && crossRatePair.SellPrice > 0) {
+                                crossRatePair.IsCross = true;
                                 crossRatePair.Spread = Math.Round((crossRatePair.SellPrice - crossRatePair.PurchasePrice) / crossRatePair.PurchasePrice * 100, 4);
+                                //Console.WriteLine($"{crossRatePair.PurchasePath}  {crossRatePair.SellPath}  {crossRatePair.Spread}");
                                 _crossRatesByMarket.Add(crossRatePair);
                             }
                         } catch (Exception e) {
+
                             //Console.WriteLine($"Exception! {e.Message}");
                         }
 

@@ -57,7 +57,7 @@ namespace CryptoAnalysatorWebApp.TelegramBot
                 //Console.WriteLine($"Bot Works In Channel");
                 PairsAnalysator pairsAnalysator = new PairsAnalysator();
 
-                BasicCryptoMarket[] marketsArray = { new PoloniexMarket(), new BittrexMarket(), new ExmoMarket(), new BinanceMarket() };
+                BasicCryptoMarket[] marketsArray = { new PoloniexMarket(), new BittrexMarket(), new ExmoMarket(), new BinanceMarket(), new LivecoinMarket() };
                 pairsAnalysator.FindActualPairsAndCrossRates(marketsArray, "bot");
 
                 //Console.WriteLine("ANALYSED");
@@ -76,7 +76,7 @@ namespace CryptoAnalysatorWebApp.TelegramBot
 
                 maxDateTimePairs = timeP > maxDateTimePairs ? timeP : DateTime.Now;
                 maxDateTimeCrosses = timeC > maxDateTimeCrosses ? timeC : DateTime.Now;
-                maxDateTimeCrosses = timeCBM > maxDateTimeCrossesByMarket ? timeCBM: DateTime.Now;
+                maxDateTimeCrossesByMarket = timeCBM > maxDateTimeCrossesByMarket ? timeCBM: DateTime.Now;
 
                 int count = 0;
                 foreach (KeyValuePair<ExchangePair, DateTime> kvp in TimeService.TimePairs) {
@@ -109,8 +109,8 @@ namespace CryptoAnalysatorWebApp.TelegramBot
                 foreach (KeyValuePair<ExchangePair, DateTime> kvp in TimeService.TimeCrossesByMarket) {
                     if (kvp.Value == maxDateTimeCrossesByMarket && count < 30) {
                         ExchangePair exchangePair = kvp.Key;
-
-                        if (exchangePair.Spread > 5) {
+                       
+                        if (exchangePair.Spread > (decimal)0.99) {
                             message += $"{count + 1})  -> {exchangePair.PurchasePath}  <- {exchangePair.SellPath}\n" +
                                 $"{exchangePair.Market}      ({exchangePair.Spread})%\n";
                             count++;

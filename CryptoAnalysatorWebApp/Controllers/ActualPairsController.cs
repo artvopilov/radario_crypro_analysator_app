@@ -15,14 +15,16 @@ namespace CryptoAnalysatorWebApp.Controllers
         private BittrexMarket _bittrexMarket;
         private BinanceMarket _binanceMarket;
         private PairsAnalysator _pairsAnalysator;
+        private LivecoinMarket _livecoinMarket;
 
-        public ActualPairsController(PoloniexMarket poloniexMarket, BittrexMarket bittrexMarket, ExmoMarket exmoMarket, PairsAnalysator pairsAnalysator, BinanceMarket binanceMarket) {
+        public ActualPairsController(PoloniexMarket poloniexMarket, BittrexMarket bittrexMarket, ExmoMarket exmoMarket, PairsAnalysator pairsAnalysator, BinanceMarket binanceMarket, LivecoinMarket livecoinMarket) {
             Console.WriteLine("HELLO FROM Controller");
             _exmoMarket = exmoMarket;
             _poloniexMarket = poloniexMarket;
             _bittrexMarket = bittrexMarket;
             _pairsAnalysator = pairsAnalysator;
             _binanceMarket = binanceMarket;
+            _livecoinMarket = livecoinMarket;
         }
 
         // GET api/actualpairs
@@ -30,7 +32,7 @@ namespace CryptoAnalysatorWebApp.Controllers
         [Produces("application/json")]
         public IActionResult Get() {
 
-            BasicCryptoMarket[] marketsArray = { _poloniexMarket, _bittrexMarket, _exmoMarket, _binanceMarket};
+            BasicCryptoMarket[] marketsArray = { _poloniexMarket, _bittrexMarket, _exmoMarket, _binanceMarket, _livecoinMarket};
             _pairsAnalysator.FindActualPairsAndCrossRates(marketsArray, "contr");
 
             Dictionary<string, List<ExchangePair>> pairsDic = new Dictionary<string, List<ExchangePair>>();

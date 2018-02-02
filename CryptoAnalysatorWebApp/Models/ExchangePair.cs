@@ -12,7 +12,7 @@ namespace CryptoAnalysatorWebApp.Models
         public decimal PurchasePrice { get; set; }
         public decimal SellPrice { get; set; }
         public decimal Spread { get; set; }
-
+        public bool IsCross { get; set; }
         public string PurchasePath { get; set; }
         public string SellPath { get; set; }
         public string Market { get; set; }

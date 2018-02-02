@@ -26,10 +26,10 @@ class ActualPairs extends React.Component {
                     }).map(curPair => {
                         return (
                             <PairInfo pair={curPair.pair} seller={curPair.stockExchangeSeller} buyer={curPair.stockExchangeBuyer} spread={curPair.spread}
-                                      purchasePrice={curPair.purchasePrice} sellPrice={curPair.sellPrice} isCross={this.props.areCrosses}
+                                      purchasePrice={curPair.purchasePrice} sellPrice={curPair.sellPrice} isCross={curPair.isCross}
                                       url={`/api/actualpairs/${curPair.pair}?seller=${curPair.stockExchangeSeller.toLowerCase()}` +
                                     `&buyer=${curPair.stockExchangeBuyer.toLowerCase()}` +
-                                    `&isCross=${this.props.areCrosses ? "true" : "false"}`}/>
+                                    `&isCross=${curPair.isCross ? "true" : "false"}`}/>
                         )
                     })}
                 </tbody>
@@ -40,7 +40,6 @@ class ActualPairs extends React.Component {
 
 ActualPairs.proptypes = {
     data: PropTypes.array,
-    areCrosses: PropTypes.bool,
     filter: PropTypes.number
 };
 

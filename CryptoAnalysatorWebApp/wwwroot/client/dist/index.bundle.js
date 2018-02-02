@@ -19016,7 +19016,7 @@ var App = function (_React$Component) {
         _this.state = {
             crosses: [],
             crossesByMarket: [],
-            pairs: [],
+            pairsAndCrosses: [],
             filter: 0
         };
         return _this;
@@ -19044,11 +19044,13 @@ var App = function (_React$Component) {
                     btn.innerText = "Update";
                     btn.classList.remove('loading');
                 }
-                var pairs = response.data.pairs;
-                var crosses = response.data.crosses;
+                var pairsAndCrosses = response.data.pairs.concat(response.data.crosses).sort(function (a, b) {
+                    return b.spread - a.spread;
+                });
+                //const crosses = response.data.crosses;
                 var crossesByMarket = response.data.crossesbymarket;
 
-                _this2.setState({ pairs: pairs, crosses: crosses, crossesByMarket: crossesByMarket });
+                _this2.setState({ pairsAndCrosses: pairsAndCrosses, crossesByMarket: crossesByMarket });
             });
         }
     }, {
@@ -19066,12 +19068,24 @@ var App = function (_React$Component) {
                 { id: 'app' },
                 React.createElement(StatusBar, null),
                 React.createElement(Tools, { onChangeFilter: this.onChangeFilter.bind(this), updatePairs: this.updatePairs.bind(this) }),
-                React.createElement(ActualPairs, { data: this.state.pairs, areCrosses: false, filter: this.state.filter }),
-                React.createElement(ActualPairs, { data: this.state.crosses, areCrosses: true, filter: this.state.filter }),
                 React.createElement(
                     'div',
-                    { className: 'crossesByMarketTitle' },
-                    '\u041A\u0440\u043E\u0441\u0441-\u043A\u0443\u0440\u0441\u044B \u0432\u043D\u0443\u0442\u0440\u0438 \u043E\u0434\u043D\u043E\u0439 \u0431\u0438\u0440\u0436\u0438'
+                    { className: 'tableTitle' },
+                    React.createElement(
+                        'h1',
+                        null,
+                        '\u0410\u0440\u0431\u0438\u0442\u0440\u0430\u0436\u043D\u044B\u0435 \u043F\u0430\u0440\u044B \u0438 \u043A\u0440\u043E\u0441\u0441 \u043F\u0430\u0440\u044B'
+                    )
+                ),
+                React.createElement(ActualPairs, { data: this.state.pairsAndCrosses, filter: this.state.filter }),
+                React.createElement(
+                    'div',
+                    { className: 'tableTitle' },
+                    React.createElement(
+                        'h1',
+                        null,
+                        '\u041A\u0440\u043E\u0441\u0441-\u043F\u0430\u0440\u044B \u0432 \u0440\u0430\u043C\u043A\u0430\u0445 \u043E\u0434\u043D\u043E\u0439 \u0431\u0438\u0440\u0436\u0438'
+                    )
                 ),
                 React.createElement(ActualCrossesByMarket, { data: this.state.crossesByMarket, areCrosses: true, filter: this.state.filter })
             );
@@ -20098,8 +20112,8 @@ var ActualPairs = function (_React$Component) {
                         return curPair.spread >= _this2.props.filter;
                     }).map(function (curPair) {
                         return React.createElement(PairInfo, { pair: curPair.pair, seller: curPair.stockExchangeSeller, buyer: curPair.stockExchangeBuyer, spread: curPair.spread,
-                            purchasePrice: curPair.purchasePrice, sellPrice: curPair.sellPrice, isCross: _this2.props.areCrosses,
-                            url: '/api/actualpairs/' + curPair.pair + '?seller=' + curPair.stockExchangeSeller.toLowerCase() + ('&buyer=' + curPair.stockExchangeBuyer.toLowerCase()) + ('&isCross=' + (_this2.props.areCrosses ? "true" : "false")) });
+                            purchasePrice: curPair.purchasePrice, sellPrice: curPair.sellPrice, isCross: curPair.isCross,
+                            url: '/api/actualpairs/' + curPair.pair + '?seller=' + curPair.stockExchangeSeller.toLowerCase() + ('&buyer=' + curPair.stockExchangeBuyer.toLowerCase()) + ('&isCross=' + (curPair.isCross ? "true" : "false")) });
                     })
                 )
             );
@@ -20111,7 +20125,6 @@ var ActualPairs = function (_React$Component) {
 
 ActualPairs.proptypes = {
     data: PropTypes.array,
-    areCrosses: PropTypes.bool,
     filter: PropTypes.number
 };
 
@@ -20954,7 +20967,7 @@ var ActualCrossesByMarket = function (_React$Component) {
                         return curPair.spread >= _this2.props.filter;
                     }).map(function (curPair) {
                         return React.createElement(CrossInfo, { market: curPair.market, purchasePath: curPair.purchasePath, sellPath: curPair.sellPath, spread: curPair.spread,
-                            purchasePrice: curPair.purchasePrice, sellPrice: curPair.sellPrice, isCross: _this2.props.areCrosses,
+                            purchasePrice: curPair.purchasePrice, sellPrice: curPair.sellPrice, isCross: curPair.isCross,
                             url: '/api/actualpairs/crossMarket/' + curPair.market + '?purchasepath=' + curPair.purchasePath + '&sellpath=' + curPair.sellPath });
                     })
                 )
