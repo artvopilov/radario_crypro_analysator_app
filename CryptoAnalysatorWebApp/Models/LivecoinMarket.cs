@@ -59,9 +59,9 @@ namespace CryptoAnalysatorWebApp.Models
                 return (decimal)responseJson["minAsk"] * (1 + _feeTaker);
             } else {
                 if (reversePice) {
-                    return 1 / (decimal)responseJson["maxBid"] * (1 + _feeMaker);
+                    return 1 / (decimal)responseJson["maxBid"] * (1 - _feeMaker);
                 }
-                return (decimal)responseJson["maxBid"] * (1 + _feeMaker);
+                return (decimal)responseJson["maxBid"] * (1 - _feeMaker);
             }
         }
     }

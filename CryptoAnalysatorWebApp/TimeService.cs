@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using CryptoAnalysatorWebApp.Models;
 using System.Linq;
 using System.Runtime.CompilerServices;
