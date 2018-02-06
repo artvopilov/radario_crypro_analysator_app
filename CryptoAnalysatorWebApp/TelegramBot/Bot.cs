@@ -54,7 +54,7 @@ namespace CryptoAnalysatorWebApp.TelegramBot
             while (true) {
                 string message = "";
 
-                //Console.WriteLine($"Bot Works In Channel");
+                Console.WriteLine($"Bot Works In Channel");
                 PairsAnalysator pairsAnalysator = new PairsAnalysator();
 
                 BasicCryptoMarket[] marketsArray = { new PoloniexMarket(), new BittrexMarket(), new ExmoMarket(), new BinanceMarket(), new LivecoinMarket() };
@@ -72,18 +72,18 @@ namespace CryptoAnalysatorWebApp.TelegramBot
 
                 DateTime timeP = TimeService.TimePairs.Count > 0 ? TimeService.TimePairs.Max(tp => tp.Value) : DateTime.Now;
                 DateTime timeC = TimeService.TimeCrosses.Count > 0 ? TimeService.TimeCrosses.Max(tp => tp.Value) : DateTime.Now;
-                DateTime timeCBM = TimeService.TimeCrossesByMarket.Count > 0 ? TimeService.TimeCrossesByMarket.Max(tp => tp.Value) : DateTime.Now;
+                DateTime timeCbm = TimeService.TimeCrossesByMarket.Count > 0 ? TimeService.TimeCrossesByMarket.Max(tp => tp.Value) : DateTime.Now;
 
                 maxDateTimePairs = timeP > maxDateTimePairs ? timeP : DateTime.Now;
                 maxDateTimeCrosses = timeC > maxDateTimeCrosses ? timeC : DateTime.Now;
-                maxDateTimeCrossesByMarket = timeCBM > maxDateTimeCrossesByMarket ? timeCBM: DateTime.Now;
+                maxDateTimeCrossesByMarket = timeCbm > maxDateTimeCrossesByMarket ? timeCbm: DateTime.Now;
 
                 int count = 0;
                 foreach (KeyValuePair<ExchangePair, DateTime> kvp in TimeService.TimePairs) {
                     if (kvp.Value == maxDateTimePairs && count < 10) {
                         ExchangePair exchangePair = kvp.Key;
 
-                        if (exchangePair.Spread > 5) {
+                        if (exchangePair.Spread > 10) {
                             message += $"{count + 1}) {exchangePair.Pair}       {exchangePair.Spread}%\n" +
                                 $"{exchangePair.StockExchangeSeller} ({exchangePair.PurchasePrice}) -> " +
                                 $"{exchangePair.StockExchangeBuyer} ({exchangePair.SellPrice}) \n";
@@ -97,7 +97,7 @@ namespace CryptoAnalysatorWebApp.TelegramBot
                     if (kvp.Value == maxDateTimeCrosses && count < 25) {
                         ExchangePair exchangePair = kvp.Key;
 
-                        if (exchangePair.Spread > 5) {
+                        if (exchangePair.Spread > 15) {
                             message += $"{count + 1}) {exchangePair.Pair}       {exchangePair.Spread}%\n" +
                                 $"{exchangePair.StockExchangeSeller} ({exchangePair.PurchasePrice}) -> " +
                                 $"{exchangePair.StockExchangeBuyer} ({exchangePair.SellPrice}) \n";
@@ -110,7 +110,7 @@ namespace CryptoAnalysatorWebApp.TelegramBot
                     if (kvp.Value == maxDateTimeCrossesByMarket && count < 30) {
                         ExchangePair exchangePair = kvp.Key;
                        
-                        if (exchangePair.Spread > (decimal)0.99) {
+                        if (exchangePair.Spread > (decimal)0.00001) {
                             message += $"{count + 1})  -> {exchangePair.PurchasePath}  <- {exchangePair.SellPath}\n" +
                                 $"{exchangePair.Market}      ({exchangePair.Spread})%\n";
                             count++;

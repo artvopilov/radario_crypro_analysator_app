@@ -142,10 +142,10 @@ namespace CryptoAnalysatorWebApp.Models.Common
             _crossRates.Remove(name);
         }
 
-        protected string GetResponse(string url) {
+        public string GetResponse(string url, bool check = false) {
             Console.WriteLine($"Trying to get url {url}");
             using (HttpClient client = new HttpClient()) {
-                    using (HttpResponseMessage response = client.GetAsync(url).Result) {
+                    using (HttpResponseMessage response = client.GetAsync(check ? $"{url}&check=true" : url).Result) {
                         Console.WriteLine($"Got {response.StatusCode}.");
                         using (HttpContent content = response.Content) {
                             string responseStr = content.ReadAsStringAsync().Result;

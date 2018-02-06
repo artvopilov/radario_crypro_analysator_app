@@ -10,12 +10,12 @@ namespace CryptoAnalysatorWebApp.Controllers
 {
     [Route("api/[controller]")]
     public class ActualPairsController : Controller {
-        private ExmoMarket _exmoMarket;
-        private PoloniexMarket _poloniexMarket;
-        private BittrexMarket _bittrexMarket;
-        private BinanceMarket _binanceMarket;
-        private PairsAnalysator _pairsAnalysator;
-        private LivecoinMarket _livecoinMarket;
+        private readonly ExmoMarket _exmoMarket;
+        private readonly PoloniexMarket _poloniexMarket;
+        private readonly BittrexMarket _bittrexMarket;
+        private readonly BinanceMarket _binanceMarket;
+        private readonly PairsAnalysator _pairsAnalysator;
+        private readonly LivecoinMarket _livecoinMarket;
 
         public ActualPairsController(PoloniexMarket poloniexMarket, BittrexMarket bittrexMarket, ExmoMarket exmoMarket, PairsAnalysator pairsAnalysator, BinanceMarket binanceMarket, LivecoinMarket livecoinMarket) {
             Console.WriteLine("HELLO FROM Controller");
@@ -113,6 +113,10 @@ namespace CryptoAnalysatorWebApp.Controllers
                             resPurchasePrice = _binanceMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[2]}", true) /
                                 _binanceMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[0]}", false);
                             break;
+                        case "livecoin":
+                            resPurchasePrice = _livecoinMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[2]}", true) /
+                                               _livecoinMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[0]}", false);
+                            break;
                     }
                     switch (buyer) {
                         case "poloniex":
@@ -130,6 +134,10 @@ namespace CryptoAnalysatorWebApp.Controllers
                         case "binance":
                             resSellPrice = _binanceMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[2]}", false) /
                                 _binanceMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[0]}", true);
+                            break;
+                        case "livecoin":
+                            resSellPrice = _livecoinMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[2]}", false) /
+                                           _livecoinMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[0]}", true);
                             break;
                     }
                 }
@@ -163,7 +171,7 @@ namespace CryptoAnalysatorWebApp.Controllers
         // GET /api/actualpairs/crossMarket/poloniex?purchasepath=btc-ltc&sellpath=btc-eth-ltc
         [HttpGet("crossMarket/{market}")]
         [Produces("application/json")]
-        public IActionResult GetCrossByMarketRelevance (string market, [FromQuery]string purchasepath, [FromQuery]string sellpath) {
+        public IActionResult GetCrossByMarketRelevance (string market, [FromQuery]string purchasepath, [FromQuery]string sellpath, [FromQuery]bool check = false) {
             decimal resPurchasePrice = 1;
             decimal resSellPrice = 1;
             decimal newSpread = 0;
@@ -171,7 +179,7 @@ namespace CryptoAnalysatorWebApp.Controllers
 
             Dictionary<string, string> resDic = new Dictionary<string, string>();
             exchangePair = TimeService.GetCrossByMarket(market, purchasepath, sellpath);
-            if (exchangePair == null) {
+            if (exchangePair == null && !check) {
                 resDic["result"] = "Not actual";
                 resDic["purchasePrice"] = $"{resPurchasePrice}";
                 resDic["sellPrice"] = $"{resSellPrice}";
@@ -201,6 +209,12 @@ namespace CryptoAnalysatorWebApp.Controllers
                             resPurchasePrice *= _binanceMarket.LoadOrder($"{devidedPurchasePath[i]}-{devidedPurchasePath[i + 1]}", true);
                         }
                         break;
+                    case "livecoin":
+                        for (int i = 0; i <= devidedPurchasePath.Length - 2; i++) {
+                            resPurchasePrice *= _livecoinMarket.LoadOrder($"{devidedPurchasePath[i]}-{devidedPurchasePath[i + 1]}", true);
+                        }
+                        break;
+                     
                 }
                 string[] devidedSellPath = sellpath.ToUpper().Split('-').ToArray();
                 switch (market.ToLower()) {
@@ -228,6 +242,12 @@ namespace CryptoAnalysatorWebApp.Controllers
                             resSellPrice *= _binanceMarket.LoadOrder($"{devidedPurchasePath[i - 1]}-{devidedPurchasePath[i]}", false, false);
                         }
                         break;
+                    case "livecoin":
+                        for (int i = devidedPurchasePath.Length - 1; i > 0; i--) {
+                            Console.WriteLine("GO ON");
+                            resSellPrice *= _livecoinMarket.LoadOrder($"{devidedPurchasePath[i - 1]}-{devidedPurchasePath[i]}", false, false);
+                        }
+                        break;
                 }
 
                 newSpread = Math.Round((resSellPrice - resPurchasePrice) / resPurchasePrice * 100, 4);
@@ -240,13 +260,19 @@ namespace CryptoAnalysatorWebApp.Controllers
             bool pricesAreOk = newSpread > 0 ? true : false;
             if (pricesAreOk) {
                 resDic["result"] = "Ok";
-                resDic["time"] = $"{(DateTime.Now - TimeService.GetCrossByMarketTimeUpd(exchangePair))}";
+                if (!check) {
+                    resDic["time"] = $"{(DateTime.Now - TimeService.GetCrossByMarketTimeUpd(exchangePair))}";
+
+                }
                 resDic["purchasePrice"] = $"{Math.Round(resPurchasePrice, 11)}";
                 resDic["sellPrice"] = $"{Math.Round(resSellPrice, 11)}";
                 resDic["spread"] = Math.Round((resSellPrice - resPurchasePrice) / resPurchasePrice * 100, 4).ToString();
                 return Ok(resDic);
             } else {
                 resDic["result"] = "Not actual (probably no orders)";
+                resDic["purchasePrice"] = $"{Math.Round(resPurchasePrice, 11)}";
+                resDic["sellPrice"] = $"{Math.Round(resSellPrice, 11)}";
+                resDic["check"] = $"{check}";
                 return Ok(resDic);
             }
         }

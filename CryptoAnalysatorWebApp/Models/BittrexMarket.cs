@@ -41,7 +41,6 @@ namespace CryptoAnalysatorWebApp.Models
             string response = GetResponse(query);
             
             JToken responseJson = JObject.Parse(response)["result"];
-            Console.WriteLine("AAAAAAAAABBBBBBBBB");
             if (isSeller) {
                 if (reversePice) {
                     return 1 / (decimal)responseJson["sell"][0]["Rate"] * (1 + _feeTaker);

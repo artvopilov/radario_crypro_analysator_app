@@ -42,8 +42,8 @@ namespace CryptoAnalysatorWebApp
                 
             Bot.Get();
 
-            //Thread t1 = new Thread(Bot.StartChannelPosting);
-            //t1.Start();
+            Thread t1 = new Thread(Bot.StartChannelPosting);
+            t1.Start();
 
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddReact();
