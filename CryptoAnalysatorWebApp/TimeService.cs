@@ -5,10 +5,8 @@ using CryptoAnalysatorWebApp.Models;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
-namespace CryptoAnalysatorWebApp
-{
-    public class TimeService
-    {
+namespace CryptoAnalysatorWebApp {
+    public static class TimeService {
         private static Dictionary<ExchangePair, DateTime> _timeUpdatedPairs = new Dictionary<ExchangePair, DateTime>();
         private static Dictionary<ExchangePair, DateTime> _timeUpdatedCrosses = new Dictionary<ExchangePair, DateTime>();
         private static Dictionary<ExchangePair, DateTime> _timeUpdatedCrossesByMarket = new Dictionary<ExchangePair, DateTime>();
@@ -58,7 +56,11 @@ namespace CryptoAnalysatorWebApp
 
         [MethodImpl(MethodImplOptions.Synchronized)]
         public static void StoreTime(DateTime curTime, List<ExchangePair> pairsToStore, List<ExchangePair> crossesToStore, List<ExchangePair> crossesByMarketToStore) {
-            lock (_timeUpdatedPairs) lock (_timeUpdatedCrosses) {
+            lock (_timeUpdatedPairs) lock (_timeUpdatedCrosses) lock (_timeUpdatedCrossesByMarket) {
+                
+            }
+
+            {
                     List<ExchangePair> pairsToRemove = new List<ExchangePair>();
                     foreach (ExchangePair pairS in _timeUpdatedPairs.Keys) {
                         ExchangePair pairFound = pairsToStore.Find(p => p.Pair == pairS.Pair && p.StockExchangeSeller == pairS.StockExchangeSeller &&

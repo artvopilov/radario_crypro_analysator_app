@@ -37,7 +37,7 @@ namespace CryptoAnalysatorWebApp.Models
                 reversePice = reversePice == true ? false : true;
             }
 
-            string query = _basicUrl + _orderBookCommand + $"?market={currencyPair}&type=both";
+            string query = basicUrl + orderBookCommand + $"?market={currencyPair}&type=both";
             string response = GetResponse(query);
             
             JToken responseJson = JObject.Parse(response)["result"];

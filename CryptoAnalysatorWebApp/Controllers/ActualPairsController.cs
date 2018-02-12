@@ -8,8 +8,7 @@ using CryptoAnalysatorWebApp.Models;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.IO;
 
-namespace CryptoAnalysatorWebApp.Controllers
-{
+namespace CryptoAnalysatorWebApp.Controllers {
     [Route("api/[controller]")]
     public class ActualPairsController : Controller {
         private readonly ExmoMarket _exmoMarket;

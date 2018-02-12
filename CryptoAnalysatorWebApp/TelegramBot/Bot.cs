@@ -60,8 +60,6 @@ namespace CryptoAnalysatorWebApp.TelegramBot
                 BasicCryptoMarket[] marketsArray = { new PoloniexMarket(), new BittrexMarket(), new ExmoMarket(), new BinanceMarket(), new LivecoinMarket() };
                 pairsAnalysator.FindActualPairsAndCrossRates(marketsArray, "bot");
 
-                //Console.WriteLine("ANALYSED");
-
                 Dictionary<string, List<ExchangePair>> pairsDic = new Dictionary<string, List<ExchangePair>>();
                 pairsDic["crosses"] = pairsAnalysator.CrossPairs.OrderByDescending(p => p.Spread).ToList();
                 pairsDic["pairs"] = pairsAnalysator.ActualPairs.OrderByDescending(p => p.Spread).ToList();

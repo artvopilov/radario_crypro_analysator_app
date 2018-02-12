@@ -249,7 +249,7 @@ namespace CryptoAnalysatorWebApp.Models
             }
             // sW3.Dispose();
 
-            StreamWriter sW2 = File.AppendText("..\\Result.txt");
+            //StreamWriter sW2 = File.AppendText("..\\Result.txt");
             for (int i = 0; i < market.Currencies.Count; i++) {
                 for (int j = 0; j < market.Currencies.Count; j++) {
                     if (i != j && currenciesMatrixPurchaseMin[i, j] < currenciesMatrixSellMax[i, j] && (i == btcIndex || i == ethIndex)) {
@@ -270,7 +270,7 @@ namespace CryptoAnalysatorWebApp.Models
                                 crossRatePair.Spread = Math.Round((crossRatePair.SellPrice - crossRatePair.PurchasePrice) / crossRatePair.PurchasePrice * 100, 4);
                                 _crossRatesByMarket.Add(crossRatePair);
                                 
-                                sW2.WriteLine($"Crossrate: {crossRatePair.PurchasePath} {crossRatePair.PurchasePrice} {crossRatePair.SellPath} {crossRatePair.SellPrice} Spread: {crossRatePair.Spread}");
+                                //sW2.WriteLine($"Crossrate: {crossRatePair.PurchasePath} {crossRatePair.PurchasePrice} {crossRatePair.SellPath} {crossRatePair.SellPrice} Spread: {crossRatePair.Spread}");
                                 
                                 /*using (StreamWriter sW = File.AppendText("..\\logCrosses.txt")) {
                                     sW.WriteLine($"{market.MarketName.ToLower()}   {crossRatePair.PurchasePath} {crossRatePair.SellPath}  {crossRatePair.PurchasePrice}  {crossRatePair.SellPrice}");
@@ -285,7 +285,7 @@ namespace CryptoAnalysatorWebApp.Models
                     }
                 }
             }
-            sW2.Dispose();
+            //sW2.Dispose();
 
         }
 

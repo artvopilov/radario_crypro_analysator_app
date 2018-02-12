@@ -10,7 +10,7 @@ using CryptoAnalysatorWebApp.TelegramBot.Commands.Common;
 
 namespace CryptoAnalysatorWebApp.Controllers
 {
-    [Route("api/telegrambot")]
+    [Route("api/[controller]")]
     public class TelegramBotController : Controller {
         private TelegramBotClient _client;
         private IReadOnlyList<CommonCommand> _commands;
@@ -27,7 +27,7 @@ namespace CryptoAnalysatorWebApp.Controllers
 
             if (message == null) {
                 message = update.ChannelPost;
-                _commands.Where(cmnd => cmnd.Name == "check_censor").First().Execute(message, _client);
+                _commands.First(cmnd => cmnd.Name == "check_censor").Execute(message, _client);
                 return _client;
             }
 

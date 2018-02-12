@@ -52,7 +52,7 @@ namespace CryptoAnalysatorWebApp.Models
             }
 
             string[] currencyPairSplited = currencyPair.Split('-');
-            string query = _basicUrl + _orderBookCommand + $"?symbol={currencyPairSplited[1]}{currencyPairSplited[0]}";
+            string query = basicUrl + orderBookCommand + $"?symbol={currencyPairSplited[1]}{currencyPairSplited[0]}";
             string response = GetResponse(query);
 
             JObject responseJson = JObject.Parse(response);

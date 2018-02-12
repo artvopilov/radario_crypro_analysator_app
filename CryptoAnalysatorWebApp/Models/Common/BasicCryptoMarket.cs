@@ -7,16 +7,16 @@ using CryptoAnalysatorWebApp.Interfaces;
 namespace CryptoAnalysatorWebApp.Models.Common
 {
     public abstract class BasicCryptoMarket: ICryptoMarket {
-        protected readonly string _marketName;
-        protected readonly string _basicUrl;
-        protected readonly string _orderBookCommand;
+        protected readonly string marketName;
+        protected readonly string basicUrl;
+        protected readonly string orderBookCommand;
 
-        protected Dictionary<string, ExchangePair> _pairs;
-        protected Dictionary<string, ExchangePair> _crossRates;
-        protected Dictionary<string, List<ExchangePair>> _crossRatesGroups;
+        protected readonly Dictionary<string, ExchangePair> _pairs;
+        protected readonly Dictionary<string, ExchangePair> _crossRates;
+        protected readonly Dictionary<string, List<ExchangePair>> _crossRatesGroups;
         protected List<string> _currencies;
 
-        public string MarketName { get => _marketName; }
+        public string MarketName { get => marketName; }
         public Dictionary<string, ExchangePair> Pairs { get => _pairs; }
         public Dictionary<string, ExchangePair> Crosses { get => _crossRates; }
         public Dictionary<string, List<ExchangePair>> CrossesGroups { get => _crossRatesGroups; }
@@ -26,12 +26,12 @@ namespace CryptoAnalysatorWebApp.Models.Common
         protected readonly decimal _feeMaker;
 
         public BasicCryptoMarket(string url, string command, decimal feeTaker, decimal feeMaker, string orderBookCommand, string marketName) {
-            _marketName = marketName;
+            this.marketName = marketName;
             _pairs = new Dictionary<string, ExchangePair>();
             _crossRates = new Dictionary<string, ExchangePair>();
             _crossRatesGroups = new Dictionary<string, List<ExchangePair>>();
-            _basicUrl = url;
-            _orderBookCommand = orderBookCommand;
+            basicUrl = url;
+            this.orderBookCommand = orderBookCommand;
             _feeTaker = feeTaker;
             _feeMaker = feeMaker;
             LoadPairs(command);
@@ -41,7 +41,7 @@ namespace CryptoAnalysatorWebApp.Models.Common
         public void LoadPairs(string command) {
             _pairs.Clear();
             try {
-                string response = GetResponse(_basicUrl + command);
+                string response = GetResponse(basicUrl + command);
                 ProcessResponsePairs(response);
             } catch (Exception e) {
                 Console.WriteLine("Error in ProcessResponsePairs" + this.MarketName);
@@ -142,7 +142,7 @@ namespace CryptoAnalysatorWebApp.Models.Common
             _crossRates.Remove(name);
         }
 
-        public string GetResponse(string url, bool check = false) {
+        public static string GetResponse(string url, bool check = false) {
             Console.WriteLine($"Trying to get url {url}");
             using (HttpClient client = new HttpClient()) {
                     using (HttpResponseMessage response = client.GetAsync(check ? $"{url}&check=true" : url).Result) {

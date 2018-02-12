@@ -48,7 +48,7 @@ namespace CryptoAnalysatorWebApp.Models
             }
 
             currencyPair = currencyPair.Substring(currencyPair.IndexOf('-') + 1) + '/' + currencyPair.Substring(0, currencyPair.IndexOf('-'));
-            string query = _basicUrl + _orderBookCommand + $"?currencyPair={currencyPair}";
+            string query = basicUrl + orderBookCommand + $"?currencyPair={currencyPair}";
             string response = GetResponse(query);
 
             JObject responseJson = (JObject)JObject.Parse(response)["currencyPairs"][0];

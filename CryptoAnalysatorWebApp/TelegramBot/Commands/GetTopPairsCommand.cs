@@ -11,7 +11,7 @@ namespace CryptoAnalysatorWebApp.TelegramBot.Commands
 {
     public class GetTopPairsCommand : CommonCommand {
         public override string Name { get; } = "pairs";
-        private int _port;
+        private readonly int _port;
 
         public GetTopPairsCommand(int port) {
             _port = port;

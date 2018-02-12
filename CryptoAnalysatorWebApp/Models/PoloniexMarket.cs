@@ -39,7 +39,7 @@ namespace CryptoAnalysatorWebApp.Models
 
             currencyPair = currencyPair.Replace('-', '_');
             int depth = 10;
-            string query = _basicUrl + _orderBookCommand + $"&currencyPair={currencyPair}&depth={depth}";
+            string query = basicUrl + orderBookCommand + $"&currencyPair={currencyPair}&depth={depth}";
 
             string response = GetResponse(query);
 

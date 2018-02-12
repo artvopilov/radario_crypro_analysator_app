@@ -43,12 +43,26 @@
             <e p="Common" t="Include">
               <e p="CommonCommand.cs" t="Include" />
             </e>
+            <e p="CreateTradeBotCommand.cs" t="Include" />
             <e p="GetTopCrossesCommand.cs" t="Include" />
             <e p="GetTopPairsCommand.cs" t="Include" />
             <e p="HelloCommand.cs" t="Include" />
           </e>
         </e>
         <e p="TimeService.cs" t="Include" />
+        <e p="TradeBots" t="Include">
+          <e p="BittrexTradeBot.cs" t="Include" />
+          <e p="Common" t="Include">
+            <e p="CommonTradeBot.cs" t="Include" />
+            <e p="Objects" t="Include">
+              <e p="ResponseWrapper.cs" t="Include" />
+            </e>
+          </e>
+          <e p="Interfaces" t="Include">
+            <e p="ITradeBot.cs" t="Include" />
+          </e>
+          <e p="TradeBotsStorage.cs" t="Include" />
+        </e>
         <e p="wwwroot" t="Include">
           <e p="client" t="Include">
             <e p=".babelrc" t="Include" />
