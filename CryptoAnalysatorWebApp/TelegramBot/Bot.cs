@@ -35,6 +35,8 @@ namespace CryptoAnalysatorWebApp.TelegramBot
             _commands.Add(getTopPairsCommand);
             _commands.Add(getTopCrossesCommand);
             _commands.Add(new CheckCensorshipCommand());
+            _commands.Add(new CreateTradeBotCommand());
+            _commands.Add(new TradeCommand());
 
             _client = new TelegramBotClient(BotSettings.AccessToken);
             _client.SetWebhookAsync("https://add7b70b.ngrok.io/api/telegrambot").Wait();
@@ -66,7 +68,6 @@ namespace CryptoAnalysatorWebApp.TelegramBot
                 pairsDic["crossesbymarket"] = pairsAnalysator.CrossRatesByMarket.OrderByDescending(p => p.Spread).ToList();
 
                 TimeService.StoreTime(DateTime.Now, pairsDic["pairs"].ToList(), pairsDic["crosses"].ToList(), pairsDic["crossesbymarket"]);
-
 
                 DateTime timeP = TimeService.TimePairs.Count > 0 ? TimeService.TimePairs.Max(tp => tp.Value) : DateTime.Now;
                 DateTime timeC = TimeService.TimeCrosses.Count > 0 ? TimeService.TimeCrosses.Max(tp => tp.Value) : DateTime.Now;
@@ -107,7 +108,7 @@ namespace CryptoAnalysatorWebApp.TelegramBot
                 foreach (KeyValuePair<ExchangePair, DateTime> kvp in TimeService.TimeCrossesByMarket) {
                     if (kvp.Value == maxDateTimeCrossesByMarket && count < 30) {
                         ExchangePair exchangePair = kvp.Key;
-                       
+                        
                         if (exchangePair.Spread > (decimal)0.00001) {
                             message += $"{count + 1})  -> {exchangePair.PurchasePath}  <- {exchangePair.SellPath}\n" +
                                 $"{exchangePair.Market}      ({exchangePair.Spread})%\n";
@@ -120,12 +121,14 @@ namespace CryptoAnalysatorWebApp.TelegramBot
                     Thread.Sleep(2000);
                     continue;
                 } else {
-                    string channelId = "-1001333185321";
+                    string channelId = BotSettings.ChannelId;
                     _client.SendTextMessageAsync(channelId, message);
 
                     Thread.Sleep(2000);
                 }
             }
         }
+        
+        
     }
 }

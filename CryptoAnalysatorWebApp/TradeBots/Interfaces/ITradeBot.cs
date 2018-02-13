@@ -8,6 +8,10 @@ namespace CryptoAnalysatorWebApp.TradeBots.Interfaces {
         Task<ResponseWrapper> CreateBuyOrder(string pair, decimal quantity, decimal rate);
         Task<ResponseWrapper> CreateSellORder(string pair, decimal quantity, decimal rate);
         Task<ResponseWrapper> CancelOrder(string orderId);
-        void Trade();
+        Task<ResponseWrapper> GetAllPairs();
+        Task<ResponseWrapper> GetOrderBook(string pair);
+        Task<ResponseWrapper> GetOpenOrders(string pair);
+        void Trade(decimal amountBtc, decimal amountEth);
+        void MakeReadyToTrade(decimal amountBtc, decimal amountEth);
     }
 }

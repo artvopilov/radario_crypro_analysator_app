@@ -47,6 +47,7 @@
             <e p="GetTopCrossesCommand.cs" t="Include" />
             <e p="GetTopPairsCommand.cs" t="Include" />
             <e p="HelloCommand.cs" t="Include" />
+            <e p="TradeCommand.cs" t="Include" />
           </e>
         </e>
         <e p="TimeService.cs" t="Include" />

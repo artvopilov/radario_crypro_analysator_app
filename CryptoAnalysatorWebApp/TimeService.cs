@@ -116,10 +116,10 @@ namespace CryptoAnalysatorWebApp {
 
         public static DateTime GetTimeUpdBy (ExchangePair pairArg, bool isCross) {
             if (!isCross) {
-                ExchangePair curPair = _timeUpdatedPairs.Keys.Where(p => p.Pair == pairArg.Pair).First();
+                ExchangePair curPair = _timeUpdatedPairs.Keys.First(p => p.Pair == pairArg.Pair);
                 return _timeUpdatedPairs[curPair];
             } else {
-                ExchangePair curCross = _timeUpdatedCrosses.Keys.Where(c => c.Pair == pairArg.Pair).First();
+                ExchangePair curCross = _timeUpdatedCrosses.Keys.First(c => c.Pair == pairArg.Pair);
                 return _timeUpdatedCrosses[curCross];
             }
         }

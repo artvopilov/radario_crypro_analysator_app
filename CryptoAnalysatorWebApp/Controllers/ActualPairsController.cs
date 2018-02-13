@@ -239,7 +239,7 @@ namespace CryptoAnalysatorWebApp.Controllers {
                     case "bittrex":
                         for (int i = devidedSellPath.Length - 1; i > 0; i--) {
                             Console.WriteLine("GO ON");
-                            resSellPrice *= _binanceMarket.LoadOrder($"{devidedSellPath[i - 1]}-{devidedSellPath[i]}", false, false);
+                            resSellPrice *= _bittrexMarket.LoadOrder($"{devidedSellPath[i - 1]}-{devidedSellPath[i]}", false, false);
                         }
                         break;
                     case "exmo":
