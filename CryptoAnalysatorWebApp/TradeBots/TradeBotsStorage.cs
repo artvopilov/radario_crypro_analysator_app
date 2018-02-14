@@ -5,6 +5,10 @@ namespace CryptoAnalysatorWebApp.TradeBots {
     public static class TradeBotsStorage {
         private static Dictionary<long, CommonTradeBot> _bittrexTradeBots;
 
+        static TradeBotsStorage() {
+            _bittrexTradeBots = new Dictionary<long, CommonTradeBot>();
+        }
+
         public static void AddTradeBot(long chatId, CommonTradeBot tradeBot, string market) {
             switch (market) {
                 case "bittrex":

@@ -39,7 +39,7 @@ namespace CryptoAnalysatorWebApp.TelegramBot
             _commands.Add(new TradeCommand());
 
             _client = new TelegramBotClient(BotSettings.AccessToken);
-            _client.SetWebhookAsync("https://add7b70b.ngrok.io/api/telegrambot").Wait();
+            _client.SetWebhookAsync("https://8a13586b.ngrok.io/api/telegrambot").Wait();
 
             return _client;
         }

@@ -23,8 +23,8 @@ namespace CryptoAnalysatorWebApp.TelegramBot.Commands {
             BittrexTradeBot bittrexTradeBot = new BittrexTradeBot(apiKey, apiSecret);
             TradeBotsStorage.AddTradeBot(chatId, bittrexTradeBot, "bittrex");
 
-            client.SendTextMessageAsync(chatId, $"Trade bot created on Bittrex. Your balancec:\n" +
-                                                $"BTC: {bittrexTradeBot.BalanceBtc}\n " +
+            client.SendTextMessageAsync(chatId, $"Trade bot created on Bittrex. Your balances:\n" +
+                                                $"BTC: {bittrexTradeBot.BalanceBtc}\n" +
                                                 $"ETH: {bittrexTradeBot.BalanceEth}");
         }
 

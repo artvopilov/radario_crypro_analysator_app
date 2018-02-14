@@ -10,6 +10,7 @@ using System.Net.Http;
 using System.Reflection.Emit;
 using System.Text;
 using Newtonsoft.Json;
+using Telegram.Bot;
 
 namespace CryptoAnalysatorWebApp.TradeBots.Common {
     public abstract class CommonTradeBot : ITradeBot {
@@ -37,6 +38,7 @@ namespace CryptoAnalysatorWebApp.TradeBots.Common {
             BalanceEth = 0;
             TradeAmountBtc = 0;
             TradeAmountEth = 0;
+            allPairs = new List<string>();
         }
 
         protected abstract HttpRequestMessage CreateRequest(string method, bool includeAuth,
@@ -52,7 +54,8 @@ namespace CryptoAnalysatorWebApp.TradeBots.Common {
         public abstract Task<ResponseWrapper> GetAllPairs();
         public abstract Task<ResponseWrapper> GetOrderBook(string pair);
         public abstract Task<ResponseWrapper> GetOpenOrders(string pair = null);
-        public abstract void Trade(decimal amountBtc, decimal amountEth);
+        public abstract void StartTrading(TelegramBotClient client, long chatId);
+        public abstract void Trade(decimal amountBtc, decimal amountEth, TelegramBotClient client, long chatId);
 
         protected string MakeApiSignature(string completeUrl) {
             var hmac = new HMACSHA512(Encoding.UTF8.GetBytes(apiSecret));
@@ -70,8 +73,8 @@ namespace CryptoAnalysatorWebApp.TradeBots.Common {
 
         public void MakeReadyToTrade(decimal amountBtc, decimal amountEth) {
             Ready = true;
-            BalanceBtc = amountBtc;
-            BalanceEth = amountEth;
+            TradeAmountBtc = amountBtc > (decimal)0.0001 ? (decimal)0.0001 : amountBtc;
+            TradeAmountEth = amountEth > (decimal)0.0001 ? (decimal)0.0001 : amountEth;
         }
     }
 }
