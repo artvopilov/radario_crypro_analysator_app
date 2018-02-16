@@ -41,7 +41,7 @@ namespace CryptoAnalysatorWebApp.Controllers
             }
 
             if (!ok) {
-                _client.SendTextMessageAsync(message.Chat.Id, "Check your command");
+                _client.SendTextMessageAsync(message.Chat.Id, "Check your command (or type /help)");
             }
             return _client;
         }

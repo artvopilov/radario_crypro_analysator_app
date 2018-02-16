@@ -199,57 +199,42 @@ namespace CryptoAnalysatorWebApp.Models
             }
             
             //Алгоритм Флойда-Уоршелла нахождения кратчайших путей между всеми парами вершин
-            // StreamWriter sW = File.AppendText("..\\checkAlgPurch.txt");
-            // sW.WriteLine(market.MarketName);
             
             for (int k = 0; k < market.Currencies.Count; k++) {
                 for (int i = 0; i < market.Currencies.Count; i++) {
-                    // sW.WriteLine($"Cross: {market.Currencies[btcIndex]} {market.Currencies[i]}  {currenciesMatrixPurchaseMin[btcIndex, i]}");
                     if (i != btcIndex && visitedPurchaseMin[btcIndex, i, nextPurchase[k, i]] != 1 && 
                         currenciesMatrixPurchaseMin[btcIndex, i] - currenciesMatrixPurchaseMin[btcIndex, k] * 
                         currenciesMatrixPurchaseMin[k, i] > 0.000001) {
                         currenciesMatrixPurchaseMin[btcIndex, i] = currenciesMatrixPurchaseMin[btcIndex, k] * currenciesMatrixPurchaseMin[k, i];
                         visitedPurchaseMin[btcIndex, i, nextPurchase[k, i]] = 1;
                         nextPurchase[btcIndex, i] = nextPurchase[k, i];
-                        // sW.WriteLine($"BTCChange: {currenciesMatrixPurchaseMin[btcIndex, i]} cur:{market.Currencies[k]} add:{market.Currencies[nextPurchase[k, i]]}");
                     }
                     
-                    // sW.WriteLine($"Cross: {market.Currencies[ethIndex]} {market.Currencies[i]}  {currenciesMatrixPurchaseMin[ethIndex, i]}");
                     if (i != ethIndex && visitedPurchaseMin[ethIndex, i, nextPurchase[k, i]] != 1 &&
                         currenciesMatrixPurchaseMin[ethIndex, i] - currenciesMatrixPurchaseMin[ethIndex, k] *
                         currenciesMatrixPurchaseMin[k, i] > 0.000001) {
                         currenciesMatrixPurchaseMin[ethIndex, i] = currenciesMatrixPurchaseMin[ethIndex, k] * currenciesMatrixPurchaseMin[k, i];
                         visitedPurchaseMin[ethIndex, i, nextPurchase[k, i]] = 1;
                         nextPurchase[ethIndex, i] = nextPurchase[k, i];
-                        // sW.WriteLine($"ETCChange: {currenciesMatrixPurchaseMin[ethIndex, i]} cur:{market.Currencies[k]} add:{market.Currencies[nextPurchase[k, i]]}");
                     }
                 }
             }
-            // sW.Dispose();
 
-            // StreamWriter sW3 = File.AppendText("..\\checkAlgSell.txt");
-            // sW3.WriteLine(market.MarketName);
             for (int k = 0; k < market.Currencies.Count; k++) {
                 for (int i = 0; i < market.Currencies.Count; i++) {
-                    // sW3.WriteLine($"Cross: {market.Currencies[btcIndex]} {market.Currencies[i]}  {currenciesMatrixSellMax[btcIndex, i]}");
                     if (i != btcIndex && visitedSellMax[btcIndex, i, nextSell[k, i]] != 1 && currenciesMatrixSellMax[btcIndex, i] - currenciesMatrixSellMax[btcIndex, k] * currenciesMatrixSellMax[k, i] < -0.0000001) {
                         currenciesMatrixSellMax[btcIndex, i] = currenciesMatrixSellMax[btcIndex, k] * currenciesMatrixSellMax[k, i];
                         visitedSellMax[btcIndex, i, nextSell[k, i]] = 1;
                         nextSell[btcIndex, i] = nextSell[k, i];
-                        // sW3.WriteLine($"BTCChange: {currenciesMatrixSellMax[btcIndex, i]} cur:{market.Currencies[k]} add:{market.Currencies[nextSell[k, i]]}");
                     }
-                    // sW3.WriteLine($"Cross: {market.Currencies[ethIndex]} {market.Currencies[i]}  {currenciesMatrixSellMax[ethIndex, i]}");
                     if (i != ethIndex && visitedSellMax[ethIndex, i, nextSell[k, i]] != 1 && currenciesMatrixSellMax[ethIndex, i] - currenciesMatrixSellMax[ethIndex, k] * currenciesMatrixSellMax[k, i] < -0.0000001) {
                         currenciesMatrixSellMax[ethIndex, i] = currenciesMatrixSellMax[ethIndex, k] * currenciesMatrixSellMax[k, i];
                         visitedSellMax[ethIndex, i, nextSell[k, i]] = 1;
                         nextSell[ethIndex, i] = nextSell[k, i];
-                        // sW3.WriteLine($"ETHChange: {currenciesMatrixSellMax[ethIndex, i]} cur:{market.Currencies[k]} add:{market.Currencies[nextSell[k, i]]}");
                     }
                 }
             }
-            // sW3.Dispose();
 
-            //StreamWriter sW2 = File.AppendText("..\\Result.txt");
             for (int i = 0; i < market.Currencies.Count; i++) {
                 for (int j = 0; j < market.Currencies.Count; j++) {
                     if (i != j && currenciesMatrixPurchaseMin[i, j] < currenciesMatrixSellMax[i, j] && (i == btcIndex || i == ethIndex)) {
@@ -270,12 +255,7 @@ namespace CryptoAnalysatorWebApp.Models
                                 crossRatePair.Spread = Math.Round((crossRatePair.SellPrice - crossRatePair.PurchasePrice) / crossRatePair.PurchasePrice * 100, 4);
                                 _crossRatesByMarket.Add(crossRatePair);
                                 
-                                //sW2.WriteLine($"Crossrate: {crossRatePair.PurchasePath} {crossRatePair.PurchasePrice} {crossRatePair.SellPath} {crossRatePair.SellPrice} Spread: {crossRatePair.Spread}");
                                 
-                                /*using (StreamWriter sW = File.AppendText("..\\logCrosses.txt")) {
-                                    sW.WriteLine($"{market.MarketName.ToLower()}   {crossRatePair.PurchasePath} {crossRatePair.SellPath}  {crossRatePair.PurchasePrice}  {crossRatePair.SellPrice}");
-                                    sW.WriteLine(market.GetResponse($"http://localhost:5000/api/actualpairs/crossMarket/{market.MarketName.ToLower()}?purchasepath={crossRatePair.PurchasePath}&sellpath={crossRatePair.SellPath}", true));
-                                }*/
                             }
                         } catch (Exception e) {
 
@@ -285,7 +265,6 @@ namespace CryptoAnalysatorWebApp.Models
                     }
                 }
             }
-            //sW2.Dispose();
 
         }
 

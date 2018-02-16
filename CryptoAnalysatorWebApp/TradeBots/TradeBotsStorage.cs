@@ -9,24 +9,33 @@ namespace CryptoAnalysatorWebApp.TradeBots {
             _bittrexTradeBots = new Dictionary<long, CommonTradeBot>();
         }
 
-        public static void AddTradeBot(long chatId, CommonTradeBot tradeBot, string market) {
+        public static bool AddTradeBot(long chatId, CommonTradeBot tradeBot, string market) {
             switch (market) {
                 case "bittrex":
                     if (!_bittrexTradeBots.ContainsKey(chatId)) {
                         _bittrexTradeBots.Add(chatId, tradeBot);
+                        return true;
                     }
+                    return false;
                     break;
             }
+
+            return false;
         }
 
-        public static void DeleteTradeBot(long chatId, string market) {
+        public static bool DeleteTradeBot(long chatId, string market) {
             switch (market) {
                 case "bittrex":
                     if (_bittrexTradeBots.ContainsKey(chatId)) {
                         _bittrexTradeBots.Remove(chatId);
+                        return true;
                     }
+
+                    return false;
                     break;
             }
+
+            return false;
         }
 
         public static bool Exists(long chatId, string market) {

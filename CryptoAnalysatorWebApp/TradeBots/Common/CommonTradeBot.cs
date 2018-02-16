@@ -20,7 +20,7 @@ namespace CryptoAnalysatorWebApp.TradeBots.Common {
         private readonly string apiSecret;
         protected readonly string baseUrl;
         protected readonly HttpClient httpClient;
-        protected readonly List<string> allPairs;
+        protected readonly Dictionary<string, decimal> allPairs;
 
         public bool Ready { get; set; }
         public decimal BalanceBtc { get; set; }
@@ -38,7 +38,7 @@ namespace CryptoAnalysatorWebApp.TradeBots.Common {
             BalanceEth = 0;
             TradeAmountBtc = 0;
             TradeAmountEth = 0;
-            allPairs = new List<string>();
+            allPairs = new Dictionary<string, decimal>();
         }
 
         protected abstract HttpRequestMessage CreateRequest(string method, bool includeAuth,
@@ -73,8 +73,8 @@ namespace CryptoAnalysatorWebApp.TradeBots.Common {
 
         public void MakeReadyToTrade(decimal amountBtc, decimal amountEth) {
             Ready = true;
-            TradeAmountBtc = amountBtc > (decimal)0.0001 ? (decimal)0.0001 : amountBtc;
-            TradeAmountEth = amountEth > (decimal)0.0001 ? (decimal)0.0001 : amountEth;
+            TradeAmountBtc = amountBtc > (decimal)0.0007 ? (decimal)0.0007 : amountBtc;
+            TradeAmountEth = amountEth > (decimal)0.007 ? (decimal)0.007 : amountEth;
         }
     }
 }

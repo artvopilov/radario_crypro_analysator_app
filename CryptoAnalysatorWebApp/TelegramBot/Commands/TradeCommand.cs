@@ -15,10 +15,18 @@ namespace CryptoAnalysatorWebApp.TelegramBot.Commands {
             var chatId = message.Chat.Id;
 
             (string market, decimal amountBtc, decimal amountEth) = GetTradeData(message);
+            if (amountBtc != 0 && amountBtc < (decimal) 0.0005) {
+                client.SendTextMessageAsync(chatId, "Can't trade with < 0.0005 btc");
+                return;
+            }
+            if (amountEth != 0 && amountEth < (decimal) 0.0005) {
+                client.SendTextMessageAsync(chatId, "Can't trade with < 0.005 eth");
+                return;
+            }
             if (amountBtc == 0 && amountEth == 0) {
                 client.SendTextMessageAsync(chatId, "Can't trade with 0 btc and 0 eth");
                 return;
-            }
+            } 
             
             if (TradeBotsStorage.Exists(chatId, market)) {
                 CommonTradeBot tradeBot = TradeBotsStorage.GetTardeBot(chatId, market);
@@ -28,8 +36,14 @@ namespace CryptoAnalysatorWebApp.TelegramBot.Commands {
                     return;
                 }
 
-                
-                tradeBot.StartTrading(client, chatId);
+                try {
+                    tradeBot.StartTrading(client, chatId);
+                } catch (Exception e) {
+                    Console.WriteLine($"Exctption while trading: {e.Message}");
+                    TradeBotsStorage.DeleteTradeBot(chatId, market);
+                    client.SendTextMessageAsync(chatId, e.Message + "\nBot was destryed");
+                }
+
                 client.SendTextMessageAsync(chatId, string.Format("Your bot on {0} started trading", market));
             } else {
                 client.SendTextMessageAsync(chatId, string.Format("You don't have a bot on {0}", market));
