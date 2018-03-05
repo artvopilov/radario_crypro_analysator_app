@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
 using CryptoAnalysatorWebApp.TelegramBot.Commands.Common;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -15,14 +16,17 @@ namespace CryptoAnalysatorWebApp.TelegramBot.Commands {
             var chatId = message.Chat.Id;
 
             (string apiKey, string apiSecret) = GetAuthData(message, client, chatId);
-            if (apiKey == "" || apiSecret == "") {
+            /*if (apiKey == "" || apiSecret == "") {
                 client.SendTextMessageAsync(chatId, "Error: apiKey or/and apiSecret were not provided");
-                return;
-            }
+                BittrexTradeBot bittrexTradeBot1 = new BittrexTradeBot();
+                ManualResetEvent signal1 = new ManualResetEvent(false);
+                //return;
+            }*/
+
+            BittrexTradeBot bittrexTradeBot = new BittrexTradeBot();// = new BittrexTradeBot(apiKey, apiSecret);
+            ManualResetEvent signal = new ManualResetEvent(false);// = new ManualResetEvent(false);
             
-            BittrexTradeBot bittrexTradeBot = new BittrexTradeBot(apiKey, apiSecret);
-            
-            bool created = TradeBotsStorage.AddTradeBot(chatId, bittrexTradeBot, "bittrex");
+            bool created = TradeBotsStorage.AddTradeBot(chatId, bittrexTradeBot, "bittrex", signal);
             if (!created) {
                 client.SendTextMessageAsync(chatId, $"You already have bot on bittrex");
             }

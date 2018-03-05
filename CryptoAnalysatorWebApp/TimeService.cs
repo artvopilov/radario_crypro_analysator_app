@@ -4,6 +4,8 @@ using System.IO;
 using CryptoAnalysatorWebApp.Models;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using CryptoAnalysatorWebApp.TradeBots;
 
 namespace CryptoAnalysatorWebApp {
     public static class TimeService {
@@ -57,61 +59,77 @@ namespace CryptoAnalysatorWebApp {
         [MethodImpl(MethodImplOptions.Synchronized)]
         public static void StoreTime(DateTime curTime, List<ExchangePair> pairsToStore, List<ExchangePair> crossesToStore, List<ExchangePair> crossesByMarketToStore) {
             lock (_timeUpdatedPairs) lock (_timeUpdatedCrosses) lock (_timeUpdatedCrossesByMarket) {
-                
-            }
-
-            {
-                    List<ExchangePair> pairsToRemove = new List<ExchangePair>();
-                    foreach (ExchangePair pairS in _timeUpdatedPairs.Keys) {
-                        ExchangePair pairFound = pairsToStore.Find(p => p.Pair == pairS.Pair && p.StockExchangeSeller == pairS.StockExchangeSeller &&
-                            p.StockExchangeBuyer == pairS.StockExchangeBuyer);
-                        if (pairFound == null) {
-                            pairsToRemove.Add(pairS);
-                        } else {
-                            pairsToStore.Remove(pairFound);
-                        }
-                    }
-                    foreach (ExchangePair pairRemained in pairsToStore) {
-                        _timeUpdatedPairs[pairRemained] = curTime;
-                    }
-                    foreach (ExchangePair pairRm in pairsToRemove) {
-                        _timeUpdatedPairs.Remove(pairRm);
-                    }
-
-                    List<ExchangePair> crossesToRemove = new List<ExchangePair>();
-                    foreach (ExchangePair crossS in _timeUpdatedCrosses.Keys) {
-                        ExchangePair crossFound = crossesToStore.Find(c => c.Pair == crossS.Pair && c.StockExchangeSeller == crossS.StockExchangeSeller &&
-                            c.StockExchangeBuyer == crossS.StockExchangeBuyer);
-                        if (crossFound == null) {
-                            crossesToRemove.Add(crossS);
-                        } else {
-                            crossesToStore.Remove(crossFound);
-                        }
-                    }
-                    foreach (ExchangePair crossRemained in crossesToStore) {
-                        _timeUpdatedCrosses[crossRemained] = curTime;
-                    }
-                    foreach (ExchangePair crossRm in crossesToRemove) {
-                        _timeUpdatedCrosses.Remove(crossRm);
-                    }
-
-                    List<ExchangePair> crossesByMarketToRemove = new List<ExchangePair>();
-                    foreach (ExchangePair crossByMarketS in _timeUpdatedCrossesByMarket.Keys) {
-                        ExchangePair crossByMarketFound = crossesByMarketToStore.Find(c => c.Market == crossByMarketS.Market &&
-                            c.PurchasePath == crossByMarketS.PurchasePath && c.SellPath == crossByMarketS.SellPath);
-                        if (crossByMarketFound == null) {
-                            crossesByMarketToRemove.Add(crossByMarketS);
-                        } else {
-                            crossesByMarketToStore.Remove(crossByMarketFound);
-                        }
-                    }
-                    foreach (ExchangePair crossByMarketRemained in crossesByMarketToStore) {
-                        _timeUpdatedCrossesByMarket[crossByMarketRemained] = curTime;
-                    }
-                    foreach (ExchangePair crossByMarketRm in crossesByMarketToRemove) {
-                        _timeUpdatedCrossesByMarket.Remove(crossByMarketRm);
+                ManualResetEvent[] signalsBittrex = TradeBotsStorage.GetMarketSignals("bittrex");
+                if (signalsBittrex != null) {
+                    foreach (var signal in signalsBittrex) {
+                        signal.Reset();
                     }
                 }
+                
+                List<ExchangePair> pairsToRemove = new List<ExchangePair>();
+                foreach (ExchangePair pairS in _timeUpdatedPairs.Keys) {
+                    ExchangePair pairFound = pairsToStore.Find(p => p.Pair == pairS.Pair && p.StockExchangeSeller == pairS.StockExchangeSeller &&
+                                                                    p.StockExchangeBuyer == pairS.StockExchangeBuyer);
+                    if (pairFound == null) {
+                        pairsToRemove.Add(pairS);
+                    } else {
+                        pairsToStore.Remove(pairFound);
+                    }
+                }
+                foreach (ExchangePair pairRemained in pairsToStore) {
+                    _timeUpdatedPairs[pairRemained] = curTime;
+                }
+                foreach (ExchangePair pairRm in pairsToRemove) {
+                    _timeUpdatedPairs.Remove(pairRm);
+                }
+
+                List<ExchangePair> crossesToRemove = new List<ExchangePair>();
+                foreach (ExchangePair crossS in _timeUpdatedCrosses.Keys) {
+                    ExchangePair crossFound = crossesToStore.Find(c => c.Pair == crossS.Pair && c.StockExchangeSeller == crossS.StockExchangeSeller &&
+                                                                       c.StockExchangeBuyer == crossS.StockExchangeBuyer);
+                    if (crossFound == null) {
+                        crossesToRemove.Add(crossS);
+                    } else {
+                        crossesToStore.Remove(crossFound);
+                    }
+                }
+                foreach (ExchangePair crossRemained in crossesToStore) {
+                    _timeUpdatedCrosses[crossRemained] = curTime;
+                }
+                foreach (ExchangePair crossRm in crossesToRemove) {
+                    _timeUpdatedCrosses.Remove(crossRm);
+                }
+
+                bool bittrexSignalsOn = false;
+                List<ExchangePair> crossesByMarketToRemove = new List<ExchangePair>();
+                foreach (ExchangePair crossByMarketS in _timeUpdatedCrossesByMarket.Keys) {
+                    ExchangePair crossByMarketFound = crossesByMarketToStore.Find(c => c.Market == crossByMarketS.Market &&
+                                                                                       c.PurchasePath == crossByMarketS.PurchasePath && c.SellPath == crossByMarketS.SellPath);
+                    if (crossByMarketFound == null) {
+                        crossesByMarketToRemove.Add(crossByMarketS);
+                    } else {
+                        if (crossByMarketFound.Market == "Bittrex") {
+                            bittrexSignalsOn = true;
+                        }
+                        crossesByMarketToStore.Remove(crossByMarketFound);
+                    }
+                }
+                foreach (ExchangePair crossByMarketRemained in crossesByMarketToStore) {
+                    if (crossByMarketRemained.Market == "Bittrex") {
+                        bittrexSignalsOn = true;
+                    }
+                    _timeUpdatedCrossesByMarket[crossByMarketRemained] = curTime;
+                }
+                foreach (ExchangePair crossByMarketRm in crossesByMarketToRemove) {
+                    _timeUpdatedCrossesByMarket.Remove(crossByMarketRm);
+                }
+
+                if (bittrexSignalsOn && signalsBittrex != null) {
+                    foreach (var signal in signalsBittrex) {
+                        signal.Set();
+                    }
+                }
+            }
         }
 
         public static DateTime GetTimeUpdBy (ExchangePair pairArg, bool isCross) {
@@ -121,6 +139,30 @@ namespace CryptoAnalysatorWebApp {
             } else {
                 ExchangePair curCross = _timeUpdatedCrosses.Keys.First(c => c.Pair == pairArg.Pair);
                 return _timeUpdatedCrosses[curCross];
+            }
+        }
+
+        public static void AddCrossRateByMarketBittrex(ExchangePair crossRateByMarketToStore) {
+            lock (_timeUpdatedCrossesByMarket) {
+                bool toAdd = true;
+                foreach (ExchangePair crossByMarketS in _timeUpdatedCrossesByMarket.Keys) {
+                    if (crossRateByMarketToStore.Market == crossByMarketS.Market &&
+                        crossRateByMarketToStore.PurchasePath == crossByMarketS.PurchasePath &&
+                        crossRateByMarketToStore.SellPath == crossByMarketS.SellPath) {
+                        toAdd = false;
+                        break;
+                    }
+                }
+
+                if (toAdd) {
+                    _timeUpdatedCrossesByMarket[crossRateByMarketToStore] = DateTime.Now;
+                    ManualResetEvent[] signalsBittrex = TradeBotsStorage.GetMarketSignals("bittrex");
+                    if (signalsBittrex != null) {
+                        foreach (var signal in signalsBittrex) {
+                            signal.Set();
+                        }
+                    }
+                }
             }
         }
     }

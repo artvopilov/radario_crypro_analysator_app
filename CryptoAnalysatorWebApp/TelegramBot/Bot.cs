@@ -41,12 +41,12 @@ namespace CryptoAnalysatorWebApp.TelegramBot
             _commands.Add(new DeleteBotCommand());
 
             _client = new TelegramBotClient(BotSettings.AccessToken);
-            _client.SetWebhookAsync("https://e042dd49.ngrok.io/api/telegrambot").Wait();
+            _client.SetWebhookAsync("https://930b9869.ngrok.io/api/telegrambot").Wait();
 
             return _client;
         }
 
-        public static void StartChannelPosting() {
+        public static async void StartChannelPosting() {
             while (_client == null) {
                 Console.WriteLine("no client");
                 Thread.Sleep(1000);
@@ -61,8 +61,8 @@ namespace CryptoAnalysatorWebApp.TelegramBot
                 Console.WriteLine($"Bot Works In Channel");
                 PairsAnalysator pairsAnalysator = new PairsAnalysator();
 
-                BasicCryptoMarket[] marketsArray = { new PoloniexMarket(), new BittrexMarket(), new ExmoMarket(), new BinanceMarket(), new LivecoinMarket() };
-                pairsAnalysator.FindActualPairsAndCrossRates(marketsArray, "bot");
+                BasicCryptoMarket[] marketsArray = { new PoloniexMarket(), new ExmoMarket(), new BinanceMarket(), new LivecoinMarket(), new BittrexMarket() };
+                await pairsAnalysator.FindActualPairsAndCrossRates(marketsArray, "bot");
 
                 Dictionary<string, List<ExchangePair>> pairsDic = new Dictionary<string, List<ExchangePair>>();
                 pairsDic["crosses"] = pairsAnalysator.CrossPairs.OrderByDescending(p => p.Spread).ToList();
@@ -77,7 +77,7 @@ namespace CryptoAnalysatorWebApp.TelegramBot
 
                 maxDateTimePairs = timeP > maxDateTimePairs ? timeP : DateTime.Now;
                 maxDateTimeCrosses = timeC > maxDateTimeCrosses ? timeC : DateTime.Now;
-                maxDateTimeCrossesByMarket = timeCbm > maxDateTimeCrossesByMarket ? timeCbm: DateTime.Now;
+                //maxDateTimeCrossesByMarket = timeCbm > maxDateTimeCrossesByMarket ? timeCbm : DateTime.Now;
 
                 int count = 0;
                 foreach (KeyValuePair<ExchangePair, DateTime> kvp in TimeService.TimePairs) {
@@ -108,7 +108,7 @@ namespace CryptoAnalysatorWebApp.TelegramBot
                 }
 
                 foreach (KeyValuePair<ExchangePair, DateTime> kvp in TimeService.TimeCrossesByMarket) {
-                    if (kvp.Value == maxDateTimeCrossesByMarket && count < 30) {
+                    if (kvp.Value > maxDateTimeCrossesByMarket && count < 30) {
                         ExchangePair exchangePair = kvp.Key;
                         
                         if (exchangePair.Spread > (decimal)0.00001) {
@@ -118,6 +118,7 @@ namespace CryptoAnalysatorWebApp.TelegramBot
                         }
                     }
                 }
+                maxDateTimeCrossesByMarket = timeCbm > maxDateTimeCrossesByMarket ? timeCbm : DateTime.Now;
 
                 if (message == "") {
                     Thread.Sleep(2000);

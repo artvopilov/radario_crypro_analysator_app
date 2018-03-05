@@ -1,11 +1,12 @@
 ﻿using System;
-using System.Threading;
 using CryptoAnalysatorWebApp.TelegramBot.Commands.Common;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using CryptoAnalysatorWebApp.TradeBots;
 using CryptoAnalysatorWebApp.TradeBots.Common;
-using SQLitePCL;
+using System.Diagnostics;
+using System.Runtime.ConstrainedExecution;
+using System.Threading;
 
 namespace CryptoAnalysatorWebApp.TelegramBot.Commands {
     public class TradeCommand : CommonCommand {
@@ -15,7 +16,7 @@ namespace CryptoAnalysatorWebApp.TelegramBot.Commands {
             var chatId = message.Chat.Id;
 
             (string market, decimal amountBtc, decimal amountEth) = GetTradeData(message);
-            if (amountBtc != 0 && amountBtc < (decimal) 0.0005) {
+            /*if (amountBtc != 0 && amountBtc < (decimal) 0.0005) {
                 client.SendTextMessageAsync(chatId, "Can't trade with < 0.0005 btc");
                 return;
             }
@@ -25,11 +26,11 @@ namespace CryptoAnalysatorWebApp.TelegramBot.Commands {
             }
             if (amountBtc == 0 && amountEth == 0) {
                 client.SendTextMessageAsync(chatId, "Can't trade with 0 btc and 0 eth");
-                return;
-            } 
+                return;    
+            } */
             
             if (TradeBotsStorage.Exists(chatId, market)) {
-                CommonTradeBot tradeBot = TradeBotsStorage.GetTardeBot(chatId, market);
+                (CommonTradeBot tradeBot, ManualResetEvent signal) = TradeBotsStorage.GetTardeBot(chatId, market);
                 tradeBot.MakeReadyToTrade(amountBtc, amountEth);
                 if (tradeBot.TradeAmountBtc > tradeBot.BalanceBtc || tradeBot.TradeAmountEth > tradeBot.BalanceEth) {
                     client.SendTextMessageAsync(chatId, string.Format("You don't have enough balance", market));
@@ -37,7 +38,7 @@ namespace CryptoAnalysatorWebApp.TelegramBot.Commands {
                 }
 
                 try {
-                    tradeBot.StartTrading(client, chatId);
+                    tradeBot.StartTrading(client, chatId, signal);
                 } catch (Exception e) {
                     Console.WriteLine($"Exctption while trading: {e.Message}");
                     TradeBotsStorage.DeleteTradeBot(chatId, market);
@@ -53,7 +54,7 @@ namespace CryptoAnalysatorWebApp.TelegramBot.Commands {
         private (string, decimal, decimal) GetTradeData(Message message) {
             string[] messageWords = message.Text.Split(' ');
             if (messageWords.Length < 3) {
-                return ("", 0, 0);
+                return ("bittrex", 0, 0);
             }
 
             if (messageWords.Length == 3) {
@@ -70,19 +71,19 @@ namespace CryptoAnalysatorWebApp.TelegramBot.Commands {
 
                 switch (currency1) {
                     case "btc":
-                        amountBtc = decimal.TryParse(messageWords[2].Split(':')[1], out amount) ? amount : 0;
+                        amountBtc = decimal.TryParse(messageWords[2].Split(':')[1].Replace('.', ','), out amount) ? amount : 0;
                         break;
                     case "eth":
-                        amountEth = decimal.TryParse(messageWords[2].Split(':')[1], out amount) ? amount : 0;
+                        amountEth = decimal.TryParse(messageWords[2].Split(':')[1].Replace('.', ','), out amount) ? amount : 0;
                         break; 
                 }
 
                 switch (currency2) {
                     case "btc":
-                        amountBtc = decimal.TryParse(messageWords[3].Split(':')[1], out amount) ? amount : 0;
+                        amountBtc = decimal.TryParse(messageWords[3].Split(':')[1].Replace('.', ','), out amount) ? amount : 0;
                         break;
                     case "eth":
-                        amountEth = decimal.TryParse(messageWords[3].Split(':')[1], out amount) ? amount : 0;
+                        amountEth = decimal.TryParse(messageWords[3].Split(':')[1].Replace('.', ','), out amount) ? amount : 0;
                         break;
                 }
                 

@@ -9,6 +9,7 @@ namespace CryptoAnalysatorWebApp.Models.Common
     public abstract class BasicCryptoMarket: ICryptoMarket {
         protected readonly string marketName;
         protected readonly string basicUrl;
+        public readonly string GetSummariesCommand;
         protected readonly string orderBookCommand;
 
         protected readonly Dictionary<string, ExchangePair> _pairs;
@@ -31,6 +32,7 @@ namespace CryptoAnalysatorWebApp.Models.Common
             _crossRates = new Dictionary<string, ExchangePair>();
             _crossRatesGroups = new Dictionary<string, List<ExchangePair>>();
             basicUrl = url;
+            GetSummariesCommand = command;
             this.orderBookCommand = orderBookCommand;
             _feeTaker = feeTaker;
             _feeMaker = feeMaker;

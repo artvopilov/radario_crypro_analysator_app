@@ -258,9 +258,6 @@ namespace CryptoAnalysatorWebApp.Controllers {
                         for (int i = devidedSellPath.Length - 1; i > 0; i--) {
                             decimal newOrder = _livecoinMarket.LoadOrder($"{devidedSellPath[i - 1]}-{devidedSellPath[i]}", false, false);
                             resSellPrice *= newOrder;
-                            /*using (StreamWriter sw1 = System.IO.File.AppendText("..\\ControllerCheckSell.txt")) {
-                                sw1.WriteLine($"{devidedSellPath[i - 1]}-{devidedSellPath[i]} {newOrder}");
-                            }*/
                         }
                         break;
                 }

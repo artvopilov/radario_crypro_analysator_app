@@ -19,7 +19,8 @@ using Microsoft.WindowsAzure.Storage.RetryPolicies;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Telegram.Bot;
-
+using System.Diagnostics;
+using CryptoAnalysatorWebApp.Models.Db;
 
 namespace CryptoAnalysatorWebApp.TradeBots {
     public class BittrexTradeBot : CommonTradeBot {
@@ -38,6 +39,8 @@ namespace CryptoAnalysatorWebApp.TradeBots {
             BalanceBtc = currencyBtc == null ? 0 : (decimal)currencyBtc["Available"];
             BalanceEth = currencyEth == null ? 0 : (decimal)currencyEth["Available"];
         }
+
+        public BittrexTradeBot(string baseUrl = "https://bittrex.com/api/v1.1/") : base(baseUrl) { }
 
         protected override HttpRequestMessage CreateRequest(string method, bool includeAuth,
             Dictionary<string, string> parameters) {
@@ -143,34 +146,25 @@ namespace CryptoAnalysatorWebApp.TradeBots {
             return responseCancelOrder;
         }
 
-        public override void StartTrading(TelegramBotClient client, long chatId) {
-            Thread thread = new Thread(() => Trade(TradeAmountBtc, TradeAmountEth, client, chatId));
+        public override void StartTrading(TelegramBotClient client, long chatId, ManualResetEvent signal) {
+            Thread thread = new Thread(() => Trade(TradeAmountBtc, TradeAmountEth, client, chatId, signal));
             thread.Start();
         }
 
-        public override async void Trade(decimal amountBtc, decimal amountEth, TelegramBotClient client, long chatId) {
-            allPairs.Clear();
-            ResponseWrapper responseAllPairs = await GetAllPairs();
-            foreach (var pair in (JArray)responseAllPairs.Result) {
-                allPairs.Add((string)pair["MarketName"], (decimal)pair["Last"]);
-            }
-            allPairs.Add("BTC-BTC", 1);
-
-            ExchangePair crossBittrex;
+        public override async void Trade(decimal amountBtc, decimal amountEth, TelegramBotClient client, long chatId, ManualResetEvent signal) {
             bool canTradeWithBtc = amountBtc > 0 ? true : false;
             bool canTradeWithEth = amountEth > 0 ? true : false;
-            if (!canTradeWithBtc) {
-                crossBittrex = TimeService.TimeCrossesByMarket.Keys.FirstOrDefault(cross =>
-                    cross.Market == "Bittrex" && cross.PurchasePath.Split('-')[0] == "ETH");
-            } else if (!canTradeWithEth) {
-                crossBittrex = TimeService.TimeCrossesByMarket.Keys.FirstOrDefault(cross =>
-                    cross.Market == "Bittrex" && cross.PurchasePath.Split('-')[0] == "BTC");
-            } else {
-                crossBittrex = TimeService.TimeCrossesByMarket.Keys.FirstOrDefault(cross => cross.Market == "Bittrex");
-            }
-                        
-            while (crossBittrex == null) {
-                client.SendTextMessageAsync(chatId, "No crossrates");
+            
+            RestartTrading:
+            //client.SendTextMessageAsync(chatId, "Searching crossRates... ");
+            //Stopwatch fullTime = new Stopwatch();
+            //fullTime.Start();
+            allPairs.Clear();
+            decimal resultDealDone = 1;
+            signal.WaitOne();
+            
+            ExchangePair crossBittrex;
+            lock (TimeService.TimeCrossesByMarket) {
                 if (!canTradeWithBtc) {
                     crossBittrex = TimeService.TimeCrossesByMarket.Keys.FirstOrDefault(cross =>
                         cross.Market == "Bittrex" && cross.PurchasePath.Split('-')[0] == "ETH");
@@ -181,25 +175,64 @@ namespace CryptoAnalysatorWebApp.TradeBots {
                     crossBittrex =
                         TimeService.TimeCrossesByMarket.Keys.FirstOrDefault(cross => cross.Market == "Bittrex");
                 }
-
-                Thread.Sleep(2000);
             }
-            client.SendTextMessageAsync(chatId, $"Crossrate found: {crossBittrex.PurchasePath} {crossBittrex.SellPath} Spread: {crossBittrex.Spread}%");
+
+            if (crossBittrex == null) {
+                goto RestartTrading;
+            }
             
+            string currentTime = DateTime.Now.ToString("G", DateTimeFormatInfo.InvariantInfo);
+            ResponseWrapper responseAllPairs = await GetAllPairs();
+            foreach (var pair in (JArray) responseAllPairs.Result) {
+                allPairs.Add((string) pair["MarketName"], new ExchangePair {
+                    Pair = (string)pair["MarketName"],
+                    PurchasePrice = (decimal) pair["Ask"],
+                    SellPrice = (decimal) pair["Bid"],
+                    TimeInserted = currentTime
+                });
+            }
+
+            allPairs.Add("BTC-BTC", new ExchangePair {
+                Pair = "BTC-BTC",
+                PurchasePrice = 1,
+                SellPrice = 1,
+                TimeInserted = currentTime
+            });
+            
+            PairsCollectionService pairsAfterAnalysisCollection = new PairsCollectionService("PairsAfterAnalysis"); // NEW FOR DB STATISTICS
+            await pairsAfterAnalysisCollection.InsertMany(allPairs.Values.ToArray()); // NEW FOR DB STATISTICS
+            PairsCollectionService pairsCollectionService = new PairsCollectionService("Crossrates"); // NEW FOR DB STATISTICS
+            crossBittrex.InsertCounter = pairsAfterAnalysisCollection.CurrentDbId;
+            
+            //fullTime.Stop();
+            /*client.SendTextMessageAsync(chatId, $"Crossrate found: {crossBittrex.PurchasePath} {crossBittrex.SellPath} Spread: {crossBittrex.Spread}% " +
+                                                $"Time searching: {fullTime.Elapsed}");*/
+            //Stopwatch crossRateActualTime = new Stopwatch();
+            //crossRateActualTime.Start();            
             
             string[] devidedPurchasePath = crossBittrex.PurchasePath.ToUpper().Split('-').ToArray();
             string[] devidedSellPath = crossBittrex.SellPath.ToUpper().Split('-').ToArray();
-            decimal minEqualToBtc = await FindMinAmountForTrade(devidedPurchasePath, devidedSellPath, devidedPurchasePath[0] == "BTC" ? amountBtc : amountEth * allPairs["BTC-ETH"]);
+            (decimal minEqualToBtc, decimal resultDealF) =
+                await FindMinAmountForTrade(devidedPurchasePath, devidedSellPath, (decimal)0.007);//devidedPurchasePath[0] == "BTC" ? amountBtc : amountEth * allPairs["BTC-ETH"].PurchasePrice);
             if (minEqualToBtc * (decimal)0.96 < (decimal) 0.0005) {
-                client.SendTextMessageAsync(chatId, $"Crossrate is not efficient (minEqualToBtc:{minEqualToBtc}). Trading stopped");
-                TradeBotsStorage.DeleteTradeBot(chatId, "bittrex");
-                client.SendTextMessageAsync(chatId, "Bot on bittrex has done his job and was destroyed");
-                return;
+                //client.SendTextMessageAsync(chatId, $"Crossrate is not efficient (minEqualToBtc:{minEqualToBtc}). Trading stopped");
+                signal.Reset();
+                Console.WriteLine(await pairsCollectionService.UpdateDbOk(crossBittrex, $"minEqualToBtc:{minEqualToBtc}")); // NEW FOR DB STATISTICS
+                goto RestartTrading;
+            }
+
+            if (resultDealF <= 1) {
+                //client.SendTextMessageAsync(chatId, $"Crossrate is not efficient (resultDealF: {resultDealF}). Trading stopped");
+                signal.Reset();
+                Console.WriteLine(await pairsCollectionService.UpdateDbOk(crossBittrex, $"resultDealF: {resultDealF}")); // NEW FOR DB STATISTICS
+                goto RestartTrading;
             }
             
-            decimal myAmount = devidedPurchasePath[0] == "BTC" ? minEqualToBtc * (decimal)0.96 : minEqualToBtc / allPairs["BTC-ETH"] * (decimal)0.97;
-            
-            client.SendTextMessageAsync(chatId, $"Trading amount: {myAmount}");
+            decimal myAmount = devidedPurchasePath[0] == "BTC" ? minEqualToBtc * (decimal)0.96 : minEqualToBtc / allPairs["BTC-ETH"].PurchasePrice * (decimal)0.97;
+            Console.WriteLine(await pairsCollectionService.UpdateDbOk(crossBittrex, $"myAmount: {myAmount}")); // NEW FOR DB STATISTICS
+            goto RestartTrading;
+            //crossRateActualTime.Stop();
+            /*client.SendTextMessageAsync(chatId, $"Trading amount: {myAmount}  resultDealF found: {resultDealF} Time: {crossRateActualTime.Elapsed}");*/
 
             // Buy proccess
             for (int i = 0; i <= devidedPurchasePath.Length - 2; i++) {
@@ -216,7 +249,7 @@ namespace CryptoAnalysatorWebApp.TradeBots {
 
                 if (purchase) {
                     try { 
-                        myAmount = BuyCurrency(myAmount, pair).Result;
+                        (myAmount, resultDealDone) = BuyCurrency(myAmount, pair, resultDealDone).Result;
                         client.SendTextMessageAsync(chatId, $"Pair: {pair}, Amount got: {myAmount} Type: BuyCurrency");
                         if (myAmount == 0) {
                             Console.WriteLine("Error: Amount == 0");
@@ -231,7 +264,7 @@ namespace CryptoAnalysatorWebApp.TradeBots {
                     }
                 } else {
                     try { 
-                        myAmount = SellCurrency(myAmount, pair).Result;
+                        (myAmount, resultDealDone) = SellCurrency(myAmount, pair, resultDealDone, client, chatId).Result;
                         client.SendTextMessageAsync(chatId, $"Pair: {pair}, Amount got: {myAmount} Type: SellCurrency");
                         if (myAmount == 0) {
                             Console.WriteLine("Error: Amount == 0");
@@ -261,8 +294,8 @@ namespace CryptoAnalysatorWebApp.TradeBots {
                 }
 
                 if (sell) {
-                    try { 
-                        myAmount = SellCurrency(myAmount, pair).Result;
+                    try {
+                        (myAmount, resultDealDone) = SellCurrency(myAmount, pair, resultDealDone, client, chatId).Result;
                         client.SendTextMessageAsync(chatId, $"Pair: {pair}, Amount got: {myAmount} Type: SellCurrency");
                         if (myAmount == 0) {
                             Console.WriteLine("Error: Amount == 0");
@@ -277,7 +310,7 @@ namespace CryptoAnalysatorWebApp.TradeBots {
                     } 
                 } else {
                     try { 
-                        myAmount = BuyCurrency(myAmount, pair).Result;
+                        (myAmount, resultDealDone) = BuyCurrency(myAmount, pair, resultDealDone).Result;
                         client.SendTextMessageAsync(chatId, $"Pair: {pair}, Amount got: {myAmount} Type: BuyCurrency");
                         if (myAmount == 0) {
                             Console.WriteLine("Error: Amount == 0");
@@ -294,73 +327,77 @@ namespace CryptoAnalysatorWebApp.TradeBots {
             }
             
             TradeBotsStorage.DeleteTradeBot(chatId, "bittrex");
+            client.SendTextMessageAsync(chatId, $"resultDealDone: {resultDealDone}");
             client.SendTextMessageAsync(chatId, "Bot on bittrex has done his job and was destroyed");
         }
 
-        private async Task<decimal> BuyCurrency(decimal myAmount, string pair) {
+        private async Task<(decimal, decimal)> BuyCurrency(decimal myAmount, string pair, decimal resultDealDone) {
             JArray sellOrders = (JArray)GetOrderBook(pair).Result.Result["sell"];
             decimal bestBuyRate = (decimal) sellOrders[0]["Rate"];
             decimal bestBuyQuantity = (decimal)sellOrders[0]["Quantity"];
             decimal buyQuantity = bestBuyQuantity * bestBuyRate * (1 + FeeBuy) > myAmount
                 ? myAmount / bestBuyRate  * (1 + FeeBuy)
                 : bestBuyQuantity;
-            //return myAmount / bestBuyRate  * (1 + FeeBuy);
-                    
+            return (buyQuantity, 1);
+
+            resultDealDone /= (bestBuyRate * (1 + FeeBuy));
             ResponseWrapper responseBuyOrder = await CreateBuyOrder(pair, buyQuantity, bestBuyRate);
             if (!responseBuyOrder.Success) {
                 Console.WriteLine($"[ResponseError] Pair: {pair}, mess: {responseBuyOrder.Message} buyQuantity: {buyQuantity}{pair}" +
                                   $"\nRate: {bestBuyRate} BestQu: {bestBuyQuantity}");
-                return 0;
+                return (0, 1);
             }
 
             (string checkOrder, decimal quantityBought, string orderUuid) = CheckOrder(pair, "LIMIT_BUY").Result;
             Console.WriteLine($"[Check order]: {checkOrder}");
             if (checkOrder == "Ok") {
                 myAmount = buyQuantity;
-                return myAmount;
+                return (myAmount, resultDealDone);
             }
 
             if (checkOrder == "Remains") {
                 myAmount = quantityBought;
                 CancelOrder(orderUuid);
-                return myAmount;
+                return (myAmount, resultDealDone);
             }
 
             myAmount = 0;
             CancelOrder(orderUuid);
-            return myAmount;
+            return (myAmount, resultDealDone);
         }
 
-        private async Task<decimal> SellCurrency(decimal myAmount, string pair) {
+        private async Task<(decimal, decimal)> SellCurrency(decimal myAmount, string pair, decimal resultDealDone, TelegramBotClient client, long chatId) {
             JArray buyOrders = (JArray)GetOrderBook(pair).Result.Result["buy"];
             decimal bestSellRate = (decimal)buyOrders[0]["Rate"];
             decimal bestSellQuantity = (decimal)buyOrders[0]["Quantity"];
             decimal sellQuantity = bestSellQuantity > myAmount ? myAmount : bestSellQuantity;
+            
+            client.SendTextMessageAsync(chatId, $"[SellCurrency]: bestSellRate {bestSellRate}, bestSellQuantity {bestSellQuantity}, myAmount {myAmount} sellQuantity {sellQuantity}");
+            return (sellQuantity * bestSellRate * (1 - FeeSell), 1);
 
-            //return myAmount * bestSellRate * (1 - FeeSell);
-                    
+            resultDealDone *= (bestSellRate * (1 - FeeSell));
             ResponseWrapper responseSellOrder = await CreateSellORder(pair, sellQuantity, bestSellRate);
             if (!responseSellOrder.Success) {
                 Console.WriteLine($"[ResponseError] Pair: {pair}, mess: {responseSellOrder.Message}");
-                return 0;
+                return (0, 1);
             }
 
             (string checkOrder, decimal quantitySold, string orderUuid) = CheckOrder(pair, "LIMIT_SELL").Result;
-            Console.WriteLine($"Afetr SellLimit checkOrder:{checkOrder} quantitySold:{quantitySold}");
+            Console.WriteLine($"After SellLimit checkOrder:{checkOrder} quantitySold:{quantitySold}");
             if (checkOrder == "Ok") {
                 myAmount = sellQuantity * bestSellRate * (1 - FeeSell);
-                return myAmount;
+                return (myAmount, resultDealDone);
             }
 
             if (checkOrder == "Remains") {
                 myAmount = quantitySold * bestSellRate * (1 - FeeSell);
                 CancelOrder(orderUuid);
-                return myAmount;
+                return (myAmount, resultDealDone);
             }
 
             myAmount = 0;
             CancelOrder(orderUuid);
-            return myAmount;
+            return (myAmount, resultDealDone);
         }
 
         private async Task<(string, decimal, string)> CheckOrder(string pair, string orderType) {
@@ -382,7 +419,9 @@ namespace CryptoAnalysatorWebApp.TradeBots {
             }
         }
 
-        private async Task<decimal> FindMinAmountForTrade(string[] devidedPurchasePath, string[] devidedSellPath, decimal minEqualToBtc) {
+        private async Task<(decimal, decimal)> FindMinAmountForTrade(string[] devidedPurchasePath, string[] devidedSellPath, decimal minEqualToBtc) {
+            decimal resultDeal = 1;
+            
             for (int i = 0; i <= devidedPurchasePath.Length - 2; i++) {
                 bool purchase = true;
                 string pair = $"{devidedPurchasePath[i]}-{devidedPurchasePath[i + 1]}";
@@ -391,30 +430,61 @@ namespace CryptoAnalysatorWebApp.TradeBots {
                     purchase = false;
                 }
 
-                if (pair.Contains("USDT")) {
-                    return 0;
-                }
-                Console.WriteLine(pair);
+                string pairWithBtc;
 
                 if (purchase) {
+                    pairWithBtc = pair != "USDT-BTC" ? $"BTC-{pair.Split('-')[1]}" : pair;
+                    //pairWithBtc = $"BTC-{pair.Split('-')[1]}";
+                    /*if (pair.Split('-')[1] == "USDT") {
+                        pairWithBtc = "USDT-BTC";
+                        //return (0, 1);
+                    }*/
+                    Console.WriteLine(pair);
+                    
                     var responseOrders = await GetOrderBook(pair);
-                    JArray sellOrders = (JArray)responseOrders.Result["sell"];
+                    JArray sellOrders;
+                    try {
+                        sellOrders = (JArray)responseOrders.Result["sell"];
+                    } catch (Exception e) {
+                        Console.WriteLine($"Exception: {e.Message} Where: {e.StackTrace}  SellOrders: {responseOrders.Result["sell"]}");
+                        return (0, 0);
+                    }
                     decimal bestBuyQuantity = (decimal)sellOrders[0]["Quantity"];
-                    Console.WriteLine($"[FindMinAmountForTrade] bestBuyQuantity:{bestBuyQuantity} pair: BTC-{pair.Split('-')[1]}={allPairs[$"BTC-{pair.Split('-')[1]}"]}");
-                    decimal equalToBtc = allPairs[$"BTC-{pair.Split('-')[1]}"] * bestBuyQuantity;
+                    Console.WriteLine($"[FindMinAmountForTrade] bestBuyQuantity:{bestBuyQuantity} pairWithBtc: {pairWithBtc}={allPairs[pairWithBtc].PurchasePrice}");
+                    decimal equalToBtc = allPairs[pairWithBtc].PurchasePrice * bestBuyQuantity;
                     if (equalToBtc < minEqualToBtc) {
                         minEqualToBtc = equalToBtc;
                     }
+                    
+                    decimal bestBuyRate = (decimal)sellOrders[0]["Rate"];
+                    resultDeal /= (bestBuyRate * (1 + FeeBuy));
 
                 } else {
+                    pairWithBtc = pair != "USDT-BTC" ? $"BTC-{pair.Split('-')[1]}" : pair;
+                    //pairWithBtc = $"BTC-{pair.Split('-')[1]}";
+                    /*if (pair.Split('-')[1] == "USDT") {
+                        pairWithBtc = "USDT-BTC";
+                        //return (0, 1);
+                    }*/
+                    Console.WriteLine(pair);
+                    
                     var responseOrders = await GetOrderBook(pair);
-                    JArray buyOrders = (JArray)responseOrders.Result["buy"];
+                    JArray buyOrders;
+                    try {
+                        buyOrders = (JArray)responseOrders.Result["buy"];
+                    } catch (Exception e) {
+                        Console.WriteLine($"Exception: {e.Message} Where: {e.StackTrace}  BuyOrders: {responseOrders.Result["buy"]}");
+                        return (0, 0);
+                    }
                     decimal bestSellQuantity = (decimal)buyOrders[0]["Quantity"];
-                    Console.WriteLine($"[FindMinAmountForTrade] bestSellQuantity:{bestSellQuantity} pair: BTC-{pair.Split('-')[0]}={allPairs[$"BTC-{pair.Split('-')[0]}"]}");
-                    decimal equalToBtc = allPairs[$"BTC-{pair.Split('-')[0]}"] * bestSellQuantity;
+                    Console.WriteLine($"[FindMinAmountForTrade] bestSellQuantity:{bestSellQuantity} pairWithBtc: {pairWithBtc}={allPairs[pairWithBtc].SellPrice}");
+                    decimal equalToBtc = allPairs[pairWithBtc].SellPrice * bestSellQuantity;
                     if (equalToBtc < minEqualToBtc) {
                         minEqualToBtc = equalToBtc;
                     }
+                    
+                    decimal bestSellRate = (decimal)buyOrders[0]["Rate"];
+                    resultDeal *= (bestSellRate * (1 - FeeSell));
                 }
                 
             }
@@ -426,31 +496,67 @@ namespace CryptoAnalysatorWebApp.TradeBots {
                     pair = $"{devidedSellPath[i]}-{devidedSellPath[i - 1]}";
                     sell = false;
                 }
-                Console.WriteLine(pair);
+
+                string pairWithBtc;
 
                 if (sell) {
+                    pairWithBtc = pair != "USDT-BTC" ? $"BTC-{pair.Split('-')[1]}" : pair;
+                    //pairWithBtc = $"BTC-{pair.Split('-')[1]}";
+                    /*if (pair.Split('-')[1] == "USDT") {
+                        pairWithBtc = "USDT-BTC";
+                        //return (0, 1);
+                    }*/
+                    Console.WriteLine(pair);
+                    
                     var responseOrders = await GetOrderBook(pair);
-                    JArray buyOrders = (JArray)responseOrders.Result["buy"];
+                    JArray buyOrders;
+                    try {
+                        buyOrders = (JArray)responseOrders.Result["buy"];
+                    } catch (Exception e) {
+                        Console.WriteLine($"Exception: {e.Message} Where: {e.StackTrace} BuyOrders: {responseOrders.Result["buy"]}");
+                        return (0, 0);
+                    }
                     decimal bestSellQuantity = (decimal)buyOrders[0]["Quantity"];
-                    Console.WriteLine($"[FindMinAmountForTrade] bestSellQuantity:{bestSellQuantity} pair: BTC-{pair.Split('-')[0]}={allPairs[$"BTC-{pair.Split('-')[0]}"]}");
-                    decimal equalToBtc = allPairs[$"BTC-{pair.Split('-')[0]}"] * bestSellQuantity;
+                    Console.WriteLine($"[FindMinAmountForTrade] bestSellQuantity:{bestSellQuantity} pairWithBtc: {pairWithBtc}={allPairs[pairWithBtc].SellPrice}");
+                    decimal equalToBtc = allPairs[pairWithBtc].SellPrice * bestSellQuantity;
                     if (equalToBtc < minEqualToBtc) {
                         minEqualToBtc = equalToBtc;
                     }
+                    
+                    decimal bestSellRate = (decimal)buyOrders[0]["Rate"];
+                    resultDeal *= (bestSellRate * (1 - FeeSell));
                 } else {
+                    pairWithBtc = pair != "USDT-BTC" ? $"BTC-{pair.Split('-')[1]}" : pair;
+                    //pairWithBtc = $"BTC-{pair.Split('-')[1]}";
+                    /*if (pair.Split('-')[1] == "USDT") {
+                        pairWithBtc = "USDT-BTC";
+                        //return (0, 1);
+                    }*/
+                    Console.WriteLine(pair);
+                    
                     var responseOrders = await GetOrderBook(pair);
-                    JArray sellOrders = (JArray)responseOrders.Result["sell"];
+                    JArray sellOrders;
+                    try {
+                        sellOrders = (JArray) responseOrders.Result["sell"];
+                    } catch (Exception e) {
+                        Console.WriteLine($"Exception: {e.Message} Where: {e.StackTrace} SellOrders: {responseOrders.Result["sell"]}");
+                        return (0, 0);
+                    }
                     decimal bestBuyQuantity = (decimal)sellOrders[0]["Quantity"];
-                    Console.WriteLine($"[FindMinAmountForTrade] bestBuyQuantity:{bestBuyQuantity} pair: BTC-{pair.Split('-')[1]}={allPairs[$"BTC-{pair.Split('-')[1]}"]}");
-                    decimal equalToBtc = allPairs[$"BTC-{pair.Split('-')[1]}"] * bestBuyQuantity;
+                    Console.WriteLine($"[FindMinAmountForTrade] bestBuyQuantity:{bestBuyQuantity} pairWithBtc: {pairWithBtc}={allPairs[pairWithBtc].PurchasePrice}");
+                    decimal equalToBtc = allPairs[pairWithBtc].PurchasePrice * bestBuyQuantity;
                     if (equalToBtc < minEqualToBtc) {
                         minEqualToBtc = equalToBtc;
                     }
+                    
+                    decimal bestBuyRate = (decimal)sellOrders[0]["Rate"];
+                    resultDeal /= (bestBuyRate * (1 + FeeBuy));
                 }
             }
 
             Console.WriteLine($"minEqualToBtc:{minEqualToBtc}");
-            return minEqualToBtc;
+            Console.WriteLine($"resultDeal {resultDeal}");
+            return (minEqualToBtc, resultDeal);
         }
     }
 }

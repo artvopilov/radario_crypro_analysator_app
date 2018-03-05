@@ -2,16 +2,23 @@
 using System.Collections.Generic;
 using CryptoAnalysatorWebApp.Models.Common;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
+using System.Threading.Tasks;
+using MongoDB.Driver.Core;
+using MongoDB.Driver;
+using MongoDB.Bson;
+using CryptoAnalysatorWebApp.Models.Db;
 
 namespace CryptoAnalysatorWebApp.Models
 {
     public class PairsAnalysator {
-        List<ExchangePair> _actualPairs;
-        List<ExchangePair> _crossRates;
-        List<ExchangePair> _crossRatesByMarket;
+        private List<ExchangePair> _actualPairs;
+        private List<ExchangePair> _crossRates;
+        private List<ExchangePair> _crossRatesByMarket;
 
         public PairsAnalysator() {
             _actualPairs = new List<ExchangePair>();
@@ -23,14 +30,10 @@ namespace CryptoAnalysatorWebApp.Models
         public List<ExchangePair> CrossPairs { get => _crossRates; set => _crossRates = value; }
         public List<ExchangePair> CrossRatesByMarket { get => _crossRatesByMarket; set => _crossRatesByMarket = value; }
 
-        public void FindActualPairsAndCrossRates(BasicCryptoMarket[] marketsArray, string caller) {
+        public async Task FindActualPairsAndCrossRates(BasicCryptoMarket[] marketsArray, string caller) {
             _actualPairs.Clear();
             _crossRates.Clear();
             _crossRatesByMarket.Clear();
-            
-            for (int i = 0; i < marketsArray.Length; i++) {
-                FindCrossesOnMarket(marketsArray[i]);
-            }
 
             for (int i = 0; i < marketsArray.Length - 1; i++) {
                 foreach (ExchangePair thatMarketPair in marketsArray[i].Pairs.Values) {
@@ -50,6 +53,10 @@ namespace CryptoAnalysatorWebApp.Models
                     }
                 }
             }
+            
+            for (int i = 0; i < marketsArray.Length; i++) {
+                await FindCrossesOnMarket(marketsArray[i]);
+            }
         }
 
         private ExchangePair AnalysePairs(ExchangePair thatMarketPair, BasicCryptoMarket[] marketsArray, int i, bool isCross = false, string keyWord = "") {
@@ -58,7 +65,7 @@ namespace CryptoAnalysatorWebApp.Models
             ExchangePair actualPair = new ExchangePair();
             string name = thatMarketPair.Pair;
             
-            if (isCross && marketsArray[i].GetSimilarCrosses(name).Length > 0 && (name.Split('-')[0] == "BTC" || name.Split('-')[0] == "ETH")) {
+            /*if (isCross && marketsArray[i].GetSimilarCrosses(name).Length > 0 && (name.Split('-')[0] == "BTC" || name.Split('-')[0] == "ETH")) {
                 foreach (ExchangePair crossRate in marketsArray[i].GetSimilarCrosses(name)) {
                     if (thatMarketPair.PurchasePrice < crossRate.SellPrice) {
                         ExchangePair crossRatePair = new ExchangePair();
@@ -100,7 +107,7 @@ namespace CryptoAnalysatorWebApp.Models
                     }
                 }
 
-            }
+            }*/
             for (int j = i; j < marketsArray.Length; j++) {
                 ExchangePair anotherMarketPair;
 
@@ -144,7 +151,11 @@ namespace CryptoAnalysatorWebApp.Models
             }
         }
 
-        private void FindCrossesOnMarket(BasicCryptoMarket market) {
+        private async Task FindCrossesOnMarket(BasicCryptoMarket market) {
+            PairsCollectionService pairsBeforeAnalysisCollection = new PairsCollectionService("PairsBeforeAnalysis");
+            PairsCollectionService crossratesCollection = new PairsCollectionService("Crossrates");
+            
+            market.LoadPairs(market.GetSummariesCommand);
             Console.WriteLine($"Market: {market.MarketName}");
 
             double[,] currenciesMatrixPurchaseMin = new double[market.Currencies.Count, market.Currencies.Count];
@@ -185,8 +196,10 @@ namespace CryptoAnalysatorWebApp.Models
                     currenciesMatrixSellMax[i, j] = 0;
                 }
             }
-
+            
+            string currentTime = DateTime.Now.ToString("G", DateTimeFormatInfo.InvariantInfo);
             foreach (KeyValuePair<string, ExchangePair> pair in market.Pairs) {
+                pair.Value.TimeInserted = currentTime;
                 string[] currencies = pair.Key.Split('-');
                 int index1 = market.Currencies.IndexOf(currencies[0]);
                 int index2 = market.Currencies.IndexOf(currencies[1]);
@@ -235,6 +248,7 @@ namespace CryptoAnalysatorWebApp.Models
                 }
             }
 
+            bool mustBeInsertedIntoDb = false;
             for (int i = 0; i < market.Currencies.Count; i++) {
                 for (int j = 0; j < market.Currencies.Count; j++) {
                     if (i != j && currenciesMatrixPurchaseMin[i, j] < currenciesMatrixSellMax[i, j] && (i == btcIndex || i == ethIndex)) {
@@ -253,6 +267,11 @@ namespace CryptoAnalysatorWebApp.Models
                             if (crossRatePair.PurchasePrice > 0 && crossRatePair.SellPrice > 0) {
                                 crossRatePair.IsCross = true;
                                 crossRatePair.Spread = Math.Round((crossRatePair.SellPrice - crossRatePair.PurchasePrice) / crossRatePair.PurchasePrice * 100, 4);
+                                if (crossRatePair.Market == "Bittrex") {
+                                    mustBeInsertedIntoDb = true;
+                                    await crossratesCollection.Insert(crossRatePair);
+                                    TimeService.AddCrossRateByMarketBittrex(crossRatePair);
+                                }
                                 _crossRatesByMarket.Add(crossRatePair);
                                 
                                 
@@ -265,7 +284,9 @@ namespace CryptoAnalysatorWebApp.Models
                     }
                 }
             }
-
+            if (mustBeInsertedIntoDb) {
+                await pairsBeforeAnalysisCollection.InsertMany(market.Pairs.Values.ToArray());
+            }
         }
 
         private string GetPath(int start, int curFinish, List<int> visited, int[,] nextArray, List<string> currencies, string result) {

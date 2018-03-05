@@ -6,6 +6,7 @@ CryptoAnalysatorWebApp/Properties/
 CryptoAnalysatorWebApp/wwwroot/.idea/
 CryptoAnalysatorWebApp/wwwroot/client/package-lock.json
 CryptoAnalysatorWebApp/wwwroot/client/node_modules/
+db/
 
 
 
