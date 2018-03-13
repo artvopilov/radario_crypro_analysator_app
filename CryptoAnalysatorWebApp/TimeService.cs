@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using CryptoAnalysatorWebApp.TradeBots;
+using CryptoAnalysatorWebApp.TradeBots.Common.Objects;
 
 namespace CryptoAnalysatorWebApp {
     public static class TimeService {
@@ -59,7 +60,7 @@ namespace CryptoAnalysatorWebApp {
         [MethodImpl(MethodImplOptions.Synchronized)]
         public static void StoreTime(DateTime curTime, List<ExchangePair> pairsToStore, List<ExchangePair> crossesToStore, List<ExchangePair> crossesByMarketToStore) {
             lock (_timeUpdatedPairs) lock (_timeUpdatedCrosses) lock (_timeUpdatedCrossesByMarket) {
-                ManualResetEvent[] signalsBittrex = TradeBotsStorage.GetMarketSignals("bittrex");
+                ManualResetEvent[] signalsBittrex = TradeBotsStorage<ResponseWrapper>.GetMarketSignals("bittrex");
                 if (signalsBittrex != null) {
                     foreach (var signal in signalsBittrex) {
                         signal.Reset();
@@ -156,7 +157,7 @@ namespace CryptoAnalysatorWebApp {
 
                 if (toAdd) {
                     _timeUpdatedCrossesByMarket[crossRateByMarketToStore] = DateTime.Now;
-                    ManualResetEvent[] signalsBittrex = TradeBotsStorage.GetMarketSignals("bittrex");
+                    ManualResetEvent[] signalsBittrex = TradeBotsStorage<ResponseWrapper>.GetMarketSignals("bittrex");
                     if (signalsBittrex != null) {
                         foreach (var signal in signalsBittrex) {
                             signal.Set();

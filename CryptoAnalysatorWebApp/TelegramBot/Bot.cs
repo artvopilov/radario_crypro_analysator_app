@@ -41,7 +41,7 @@ namespace CryptoAnalysatorWebApp.TelegramBot
             _commands.Add(new DeleteBotCommand());
 
             _client = new TelegramBotClient(BotSettings.AccessToken);
-            _client.SetWebhookAsync("https://930b9869.ngrok.io/api/telegrambot").Wait();
+            _client.SetWebhookAsync("https://a48cdfde.ngrok.io/api/telegrambot").Wait();
 
             return _client;
         }
@@ -62,7 +62,7 @@ namespace CryptoAnalysatorWebApp.TelegramBot
                 PairsAnalysator pairsAnalysator = new PairsAnalysator();
 
                 BasicCryptoMarket[] marketsArray = { new PoloniexMarket(), new ExmoMarket(), new BinanceMarket(), new LivecoinMarket(), new BittrexMarket() };
-                await pairsAnalysator.FindActualPairsAndCrossRates(marketsArray, "bot");
+                pairsAnalysator.FindActualPairsAndCrossRates(marketsArray, "bot");
 
                 Dictionary<string, List<ExchangePair>> pairsDic = new Dictionary<string, List<ExchangePair>>();
                 pairsDic["crosses"] = pairsAnalysator.CrossPairs.OrderByDescending(p => p.Spread).ToList();

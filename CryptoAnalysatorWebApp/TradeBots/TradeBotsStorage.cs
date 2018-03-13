@@ -4,16 +4,16 @@ using CryptoAnalysatorWebApp.TradeBots.Common;
 using System.Threading;
 
 namespace CryptoAnalysatorWebApp.TradeBots {
-    public static class TradeBotsStorage {
-        private static Dictionary<long, CommonTradeBot> _bittrexTradeBots;
+    public static class TradeBotsStorage<TResult> {
+        private static Dictionary<long, CommonTradeBot<TResult>> _bittrexTradeBots;
         private static Dictionary<long, ManualResetEvent> _bittrexTradeSignals;
 
         static TradeBotsStorage() {
-            _bittrexTradeBots = new Dictionary<long, CommonTradeBot>();
+            _bittrexTradeBots = new Dictionary<long, CommonTradeBot<TResult>>();
             _bittrexTradeSignals = new Dictionary<long, ManualResetEvent>();
         }
 
-        public static bool AddTradeBot(long chatId, CommonTradeBot tradeBot, string market, ManualResetEvent signal) {
+        public static bool AddTradeBot(long chatId, CommonTradeBot<TResult> tradeBot, string market, ManualResetEvent signal) {
             switch (market) {
                 case "bittrex":
                     if (!_bittrexTradeBots.ContainsKey(chatId)) {
@@ -53,7 +53,7 @@ namespace CryptoAnalysatorWebApp.TradeBots {
             return false;
         }
 
-        public static (CommonTradeBot, ManualResetEvent) GetTardeBot(long chatId, string market) {
+        public static (CommonTradeBot<TResult>, ManualResetEvent) GetTardeBot(long chatId, string market) {
             switch (market) {
                 case "bittrex":
                     return (_bittrexTradeBots[chatId], _bittrexTradeSignals[chatId]);

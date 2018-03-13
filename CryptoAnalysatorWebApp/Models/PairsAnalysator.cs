@@ -12,6 +12,7 @@ using MongoDB.Driver.Core;
 using MongoDB.Driver;
 using MongoDB.Bson;
 using CryptoAnalysatorWebApp.Models.Db;
+using Microsoft.EntityFrameworkCore.Query.Internal;
 
 namespace CryptoAnalysatorWebApp.Models
 {
@@ -30,7 +31,7 @@ namespace CryptoAnalysatorWebApp.Models
         public List<ExchangePair> CrossPairs { get => _crossRates; set => _crossRates = value; }
         public List<ExchangePair> CrossRatesByMarket { get => _crossRatesByMarket; set => _crossRatesByMarket = value; }
 
-        public async Task FindActualPairsAndCrossRates(BasicCryptoMarket[] marketsArray, string caller) {
+        public void FindActualPairsAndCrossRates(BasicCryptoMarket[] marketsArray, string caller) {
             _actualPairs.Clear();
             _crossRates.Clear();
             _crossRatesByMarket.Clear();
@@ -55,7 +56,7 @@ namespace CryptoAnalysatorWebApp.Models
             }
             
             for (int i = 0; i < marketsArray.Length; i++) {
-                await FindCrossesOnMarket(marketsArray[i]);
+                FindCrossesOnMarket(marketsArray[i]);
             }
         }
 
@@ -151,12 +152,12 @@ namespace CryptoAnalysatorWebApp.Models
             }
         }
 
-        private async Task FindCrossesOnMarket(BasicCryptoMarket market) {
-            PairsCollectionService pairsBeforeAnalysisCollection = new PairsCollectionService("PairsBeforeAnalysis");
-            PairsCollectionService crossratesCollection = new PairsCollectionService("Crossrates");
+        private void FindCrossesOnMarket(BasicCryptoMarket market) {
+            //PairsCollectionService pairsBeforeAnalysisCollection = new PairsCollectionService("PairsBeforeAnalysis");
+            //PairsCollectionService crossratesCollection = new PairsCollectionService("Crossrates");
             
+            Console.WriteLine($"Market: {market.MarketName}  Time: {DateTime.Now}  TimeMlscnds: {DateTime.Now.Millisecond}");
             market.LoadPairs(market.GetSummariesCommand);
-            Console.WriteLine($"Market: {market.MarketName}");
 
             double[,] currenciesMatrixPurchaseMin = new double[market.Currencies.Count, market.Currencies.Count];
             double[,] currenciesMatrixSellMax = new double[market.Currencies.Count, market.Currencies.Count];
@@ -197,9 +198,7 @@ namespace CryptoAnalysatorWebApp.Models
                 }
             }
             
-            string currentTime = DateTime.Now.ToString("G", DateTimeFormatInfo.InvariantInfo);
             foreach (KeyValuePair<string, ExchangePair> pair in market.Pairs) {
-                pair.Value.TimeInserted = currentTime;
                 string[] currencies = pair.Key.Split('-');
                 int index1 = market.Currencies.IndexOf(currencies[0]);
                 int index2 = market.Currencies.IndexOf(currencies[1]);
@@ -268,9 +267,11 @@ namespace CryptoAnalysatorWebApp.Models
                                 crossRatePair.IsCross = true;
                                 crossRatePair.Spread = Math.Round((crossRatePair.SellPrice - crossRatePair.PurchasePrice) / crossRatePair.PurchasePrice * 100, 4);
                                 if (crossRatePair.Market == "Bittrex") {
+                                    ShowRates(crossRatePair.PurchasePath.Split('-'), true, market);
+                                    ShowRates(crossRatePair.SellPath.Split('-'), false, market);
                                     mustBeInsertedIntoDb = true;
-                                    await crossratesCollection.Insert(crossRatePair);
                                     TimeService.AddCrossRateByMarketBittrex(crossRatePair);
+                                    //await crossratesCollection.Insert(crossRatePair);
                                 }
                                 _crossRatesByMarket.Add(crossRatePair);
                                 
@@ -285,7 +286,7 @@ namespace CryptoAnalysatorWebApp.Models
                 }
             }
             if (mustBeInsertedIntoDb) {
-                await pairsBeforeAnalysisCollection.InsertMany(market.Pairs.Values.ToArray());
+                //await pairsBeforeAnalysisCollection.InsertMany(market.Pairs.Values.ToArray());
             }
         }
 
@@ -294,13 +295,43 @@ namespace CryptoAnalysatorWebApp.Models
             if (visited.Contains(nextArray[start, curFinish])) {
                 throw new Exception("Incorrect path");
             }
-
+    
             if (nextArray[start, curFinish] == start) {
                 return $"{currencies[start]}-{result}";
             }
             
             
             return GetPath(start, nextArray[start, curFinish], visited, nextArray, currencies, $"{currencies[nextArray[start, curFinish]]}-{result}");
+        }
+
+        private void ShowRates(string[] devidedPath, bool purchase, BasicCryptoMarket market) {
+            if (purchase) {
+                for (int i = 0; i < devidedPath.Length - 1; i++) {
+                    string pair = devidedPath[i] + '-' + devidedPath[i + 1];
+                    if (!market.Pairs.ContainsKey(pair)) {
+                        pair = devidedPath[i + 1] + '-' + devidedPath[i];
+                        purchase = false;
+                    }
+
+                    Console.WriteLine(purchase
+                        ? $"{pair}  {market.Pairs[pair].PurchasePrice}  Buy"
+                        : $"{pair}  {market.Pairs[pair].SellPrice}  Sell");
+                }
+            } else {
+                Console.WriteLine("SellPathHere");
+                for (int i = devidedPath.Length - 1; i > 0; i--) {
+                    string pair = devidedPath[i - 1] + '-' + devidedPath[i];
+                    if (!market.Pairs.ContainsKey(pair)) {
+                        pair = devidedPath[i] + '-' + devidedPath[i - 1];
+                        purchase = true;
+                    }
+
+                    Console.WriteLine(purchase
+                        ? $"{pair}  {market.Pairs[pair].PurchasePrice}  Buy"
+                        : $"{pair}  {market.Pairs[pair].SellPrice}  Sell");
+                }
+                Console.WriteLine("SellPathComleted");
+            }
         }
     }
 }

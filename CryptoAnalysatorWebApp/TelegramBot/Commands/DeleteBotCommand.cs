@@ -1,6 +1,8 @@
 ﻿using CryptoAnalysatorWebApp.TelegramBot.Commands.Common;
 using CryptoAnalysatorWebApp.TradeBots;
 using CryptoAnalysatorWebApp.TradeBots.Common;
+using CryptoAnalysatorWebApp.TradeBots.Common.Objects;
+using Newtonsoft.Json.Linq;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
@@ -17,7 +19,7 @@ namespace CryptoAnalysatorWebApp.TelegramBot.Commands {
                 return;
             }
 
-            bool deleted = TradeBotsStorage.DeleteTradeBot(chatId, "bittrex");
+            bool deleted = TradeBotsStorage<ResponseWrapper>.DeleteTradeBot(chatId, "bittrex");
             if (deleted) {
                 client.SendTextMessageAsync(chatId, "Your trade bot on bittrex deleted");
             } else {

@@ -6,7 +6,7 @@ namespace CryptoAnalysatorWebApp.Models
 {
     public class PoloniexMarket : BasicCryptoMarket {
         public PoloniexMarket(string url = "https://poloniex.com/public?command=", string command = "returnTicker",
-            decimal feeTaker = (decimal)0.0025, decimal feeMaker = (decimal)0.0015, string orderBookCommand = "returnOrderBook", string marketName = "Poloniex") : 
+            decimal feeTaker = (decimal)0.0025, decimal feeMaker = (decimal)0.0025, string orderBookCommand = "returnOrderBook", string marketName = "Poloniex") : 
             base(url, command, feeTaker, feeMaker, orderBookCommand, marketName) {
         }
 

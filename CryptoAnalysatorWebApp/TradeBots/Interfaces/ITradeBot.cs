@@ -5,14 +5,14 @@ using Telegram.Bot;
 
 
 namespace CryptoAnalysatorWebApp.TradeBots.Interfaces {
-    public interface ITradeBot {
-        Task<ResponseWrapper> GetBalances();
-        Task<ResponseWrapper> CreateBuyOrder(string pair, decimal quantity, decimal rate);
-        Task<ResponseWrapper> CreateSellORder(string pair, decimal quantity, decimal rate);
-        Task<ResponseWrapper> CancelOrder(string orderId);
-        Task<ResponseWrapper> GetAllPairs();
-        Task<ResponseWrapper> GetOrderBook(string pair);
-        Task<ResponseWrapper> GetOpenOrders(string pair);
+    public interface ITradeBot<TResult> {
+        Task<TResult> GetBalances();
+        Task<TResult> CreateBuyOrder(string pair, decimal quantity, decimal rate);
+        Task<TResult> CreateSellORder(string pair, decimal quantity, decimal rate);
+        Task<TResult> CancelOrder(string orderId);
+        Task<TResult> GetAllPairs();
+        Task<TResult> GetOrderBook(string pair);
+        Task<TResult> GetOpenOrders(string pair);
         void StartTrading(TelegramBotClient client, long chatId, ManualResetEvent signal);
         void Trade(decimal amountBtc, decimal amountEth, TelegramBotClient client, long chatId, ManualResetEvent signal);
         void MakeReadyToTrade(decimal amountBtc, decimal amountEth);

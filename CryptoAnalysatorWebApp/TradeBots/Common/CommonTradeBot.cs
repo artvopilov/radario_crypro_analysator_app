@@ -15,7 +15,7 @@ using Newtonsoft.Json;
 using Telegram.Bot;
 
 namespace CryptoAnalysatorWebApp.TradeBots.Common {
-    public abstract class CommonTradeBot : ITradeBot {
+    public abstract class CommonTradeBot<TResult> : ITradeBot<TResult> {
         protected const string SignHeaderName = "apisign";
         
         protected readonly string apiKey;
@@ -57,16 +57,16 @@ namespace CryptoAnalysatorWebApp.TradeBots.Common {
         protected abstract HttpRequestMessage CreateRequest(string method, bool includeAuth,
             Dictionary<string, string> parameters);
 
-        protected abstract Task<ResponseWrapper> ExecuteRequest(string method, bool includeAuth,
+        protected abstract Task<TResult> ExecuteRequest(string method, bool includeAuth,
             Dictionary<string, string> parameters = null);
         
-        public abstract Task<ResponseWrapper> GetBalances();
-        public abstract Task<ResponseWrapper> CreateBuyOrder(string pair, decimal quantity, decimal rate);
-        public abstract Task<ResponseWrapper> CreateSellORder(string pair, decimal quantity, decimal rate);
-        public abstract Task<ResponseWrapper> CancelOrder(string orderId);
-        public abstract Task<ResponseWrapper> GetAllPairs();
-        public abstract Task<ResponseWrapper> GetOrderBook(string pair);
-        public abstract Task<ResponseWrapper> GetOpenOrders(string pair = null);
+        public abstract Task<TResult> GetBalances();
+        public abstract Task<TResult> CreateBuyOrder(string pair, decimal quantity, decimal rate);
+        public abstract Task<TResult> CreateSellORder(string pair, decimal quantity, decimal rate);
+        public abstract Task<TResult> CancelOrder(string orderId);
+        public abstract Task<TResult> GetAllPairs();
+        public abstract Task<TResult> GetOrderBook(string pair);
+        public abstract Task<TResult> GetOpenOrders(string pair = null);
         public abstract void StartTrading(TelegramBotClient client, long chatId, ManualResetEvent signal);
         public abstract void Trade(decimal amountBtc, decimal amountEth, TelegramBotClient client, long chatId, ManualResetEvent signal);
 

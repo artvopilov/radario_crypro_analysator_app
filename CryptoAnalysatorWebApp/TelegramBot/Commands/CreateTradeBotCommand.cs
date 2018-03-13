@@ -26,7 +26,7 @@ namespace CryptoAnalysatorWebApp.TelegramBot.Commands {
             BittrexTradeBot bittrexTradeBot = new BittrexTradeBot();// = new BittrexTradeBot(apiKey, apiSecret);
             ManualResetEvent signal = new ManualResetEvent(false);// = new ManualResetEvent(false);
             
-            bool created = TradeBotsStorage.AddTradeBot(chatId, bittrexTradeBot, "bittrex", signal);
+            bool created = TradeBotsStorage<ResponseWrapper>.AddTradeBot(chatId, bittrexTradeBot, "bittrex", signal);
             if (!created) {
                 client.SendTextMessageAsync(chatId, $"You already have bot on bittrex");
             }

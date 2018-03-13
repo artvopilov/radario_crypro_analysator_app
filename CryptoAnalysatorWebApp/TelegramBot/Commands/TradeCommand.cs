@@ -7,6 +7,8 @@ using CryptoAnalysatorWebApp.TradeBots.Common;
 using System.Diagnostics;
 using System.Runtime.ConstrainedExecution;
 using System.Threading;
+using CryptoAnalysatorWebApp.TradeBots.Common.Objects;
+using Newtonsoft.Json.Linq;
 
 namespace CryptoAnalysatorWebApp.TelegramBot.Commands {
     public class TradeCommand : CommonCommand {
@@ -29,8 +31,8 @@ namespace CryptoAnalysatorWebApp.TelegramBot.Commands {
                 return;    
             } */
             
-            if (TradeBotsStorage.Exists(chatId, market)) {
-                (CommonTradeBot tradeBot, ManualResetEvent signal) = TradeBotsStorage.GetTardeBot(chatId, market);
+            if (TradeBotsStorage<ResponseWrapper>.Exists(chatId, market)) {
+                (CommonTradeBot<ResponseWrapper> tradeBot, ManualResetEvent signal) = TradeBotsStorage<ResponseWrapper>.GetTardeBot(chatId, market);
                 tradeBot.MakeReadyToTrade(amountBtc, amountEth);
                 if (tradeBot.TradeAmountBtc > tradeBot.BalanceBtc || tradeBot.TradeAmountEth > tradeBot.BalanceEth) {
                     client.SendTextMessageAsync(chatId, string.Format("You don't have enough balance", market));
@@ -41,7 +43,7 @@ namespace CryptoAnalysatorWebApp.TelegramBot.Commands {
                     tradeBot.StartTrading(client, chatId, signal);
                 } catch (Exception e) {
                     Console.WriteLine($"Exctption while trading: {e.Message}");
-                    TradeBotsStorage.DeleteTradeBot(chatId, market);
+                    TradeBotsStorage<ResponseWrapper>.DeleteTradeBot(chatId, market);
                     client.SendTextMessageAsync(chatId, e.Message + "\nBot was destryed");
                 }
 
