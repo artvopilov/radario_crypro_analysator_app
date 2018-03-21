@@ -16,14 +16,14 @@ namespace CryptoAnalysatorWebApp.TelegramBot.Commands {
             var chatId = message.Chat.Id;
 
             (string apiKey, string apiSecret) = GetAuthData(message, client, chatId);
-            /*if (apiKey == "" || apiSecret == "") {
+            if (apiKey == "" || apiSecret == "") {
                 client.SendTextMessageAsync(chatId, "Error: apiKey or/and apiSecret were not provided");
-                BittrexTradeBot bittrexTradeBot1 = new BittrexTradeBot();
-                ManualResetEvent signal1 = new ManualResetEvent(false);
-                //return;
-            }*/
+                //BittrexTradeBot bittrexTradeBot1 = new BittrexTradeBot();
+                //ManualResetEvent signal1 = new ManualResetEvent(false);
+                return;
+            }
 
-            BittrexTradeBot bittrexTradeBot = new BittrexTradeBot();// = new BittrexTradeBot(apiKey, apiSecret);
+            BittrexTradeBot bittrexTradeBot = new BittrexTradeBot(apiKey, apiSecret);
             ManualResetEvent signal = new ManualResetEvent(false);// = new ManualResetEvent(false);
             
             bool created = TradeBotsStorage<ResponseWrapper>.AddTradeBot(chatId, bittrexTradeBot, "bittrex", signal);
@@ -33,7 +33,7 @@ namespace CryptoAnalysatorWebApp.TelegramBot.Commands {
 
             client.SendTextMessageAsync(chatId, $"Trade bot created on Bittrex. Your balances:\n" +
                                                 $"BTC: {bittrexTradeBot.BalanceBtc}\n" +
-                                                $"ETH: {bittrexTradeBot.BalanceEth}");
+                                                $"ETH: {bittrexTradeBot.BalanceEth}\n");
         }
 
         private (string, string) GetAuthData(Message message, TelegramBotClient client, long chatId) {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using CryptoAnalysatorWebApp.Models.Common;
 
@@ -30,7 +31,7 @@ namespace CryptoAnalysatorWebApp.Models
             Console.WriteLine("[INFO] PoloniexMarket is ready");
         }
 
-        public override decimal LoadOrder(string currencyPair, bool isSeller, bool reversePice = false) {
+        public override async Task<decimal> LoadOrder(string currencyPair, bool isSeller, bool reversePice = false) {
             if (!_pairs.ContainsKey(currencyPair)) {
                 currencyPair = $"{currencyPair.Split('-')[1]}-{currencyPair.Split('-')[0]}";
                 isSeller = isSeller == true ? false : true;
@@ -41,7 +42,7 @@ namespace CryptoAnalysatorWebApp.Models
             int depth = 10;
             string query = basicUrl + orderBookCommand + $"&currencyPair={currencyPair}&depth={depth}";
 
-            string response = GetResponse(query);
+            string response = await GetResponse(query);
 
             JObject responseJson = JObject.Parse(response);
             if (isSeller) {

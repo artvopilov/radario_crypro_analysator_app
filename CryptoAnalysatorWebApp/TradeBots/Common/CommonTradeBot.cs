@@ -23,6 +23,7 @@ namespace CryptoAnalysatorWebApp.TradeBots.Common {
         protected readonly string baseUrl;
         protected readonly HttpClient httpClient;
         protected readonly Dictionary<string, ExchangePair> allPairs;
+        protected Dictionary<string, decimal> walletBalances;
 
         public bool Ready { get; set; }
         public decimal BalanceBtc { get; set; }
@@ -41,6 +42,7 @@ namespace CryptoAnalysatorWebApp.TradeBots.Common {
             TradeAmountBtc = 0;
             TradeAmountEth = 0;
             allPairs = new Dictionary<string, ExchangePair>();
+            walletBalances = new Dictionary<string, decimal>();
         }
 
         protected CommonTradeBot(string baseUrl) {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using CryptoAnalysatorWebApp.Models.Common;
 
@@ -11,9 +12,9 @@ namespace CryptoAnalysatorWebApp.Models
         }
 
         protected override void ProcessResponsePairs(string response) {
-            var responseJSON = JObject.Parse(response)["result"];
+            var responseJson = JObject.Parse(response)["result"];
 
-            foreach (JObject pair in responseJSON) {
+            foreach (JObject pair in responseJson) {
                 ExchangePair exPair = new ExchangePair();
                 exPair.Pair = (string)pair["MarketName"];
                 exPair.PurchasePrice = (decimal)pair["Ask"] * (1 + _feeTaker);
@@ -30,15 +31,15 @@ namespace CryptoAnalysatorWebApp.Models
             Console.WriteLine("[INFO] BittrexMarket is ready");
         }
 
-        public override decimal LoadOrder(string currencyPair, bool isSeller, bool reversePice = false) {
+        public override async Task<decimal> LoadOrder(string currencyPair, bool isSeller, bool reversePice = false) {
             if (!_pairs.ContainsKey(currencyPair)) {
                 currencyPair = $"{currencyPair.Split('-')[1]}-{currencyPair.Split('-')[0]}";
-                isSeller = isSeller == true ? false : true;
-                reversePice = reversePice == true ? false : true;
+                isSeller = isSeller != true;
+                reversePice = reversePice != true;
             }
 
             string query = basicUrl + orderBookCommand + $"?market={currencyPair}&type=both";
-            string response = GetResponse(query);
+            string response = await GetResponse(query);
             
             JToken responseJson = JObject.Parse(response)["result"];
             if (isSeller) {

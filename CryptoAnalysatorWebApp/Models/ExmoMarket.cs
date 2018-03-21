@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using CryptoAnalysatorWebApp.Models.Common;
 
@@ -33,7 +34,7 @@ namespace CryptoAnalysatorWebApp.Models
             Console.WriteLine("[INFO] ExmoMarket is ready");
         }
 
-        public override decimal LoadOrder(string currencyPair, bool isSeller, bool reversePice = false) {
+        public override async Task<decimal> LoadOrder(string currencyPair, bool isSeller, bool reversePice = false) {
             if (!_pairs.ContainsKey(currencyPair)) {
                 currencyPair = $"{currencyPair.Split('-')[1]}-{currencyPair.Split('-')[0]}";
                 isSeller = isSeller == true ? false : true;
@@ -42,7 +43,7 @@ namespace CryptoAnalysatorWebApp.Models
 
             currencyPair = currencyPair.Substring(currencyPair.IndexOf('-') + 1) + '_' + currencyPair.Substring(0, currencyPair.IndexOf('-'));
             string query = basicUrl + orderBookCommand + $"/?pair={currencyPair}";
-            string response = GetResponse(query);
+            string response = await GetResponse(query);
 
             JObject responseJson = JObject.Parse(response);
             if (isSeller) {

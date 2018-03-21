@@ -13,6 +13,7 @@ using MongoDB.Driver;
 using MongoDB.Bson;
 using CryptoAnalysatorWebApp.Models.Db;
 using Microsoft.EntityFrameworkCore.Query.Internal;
+using CryptoAnalysatorWebApp.Models.AnalyzingAlgorithms;
 
 namespace CryptoAnalysatorWebApp.Models
 {
@@ -31,7 +32,7 @@ namespace CryptoAnalysatorWebApp.Models
         public List<ExchangePair> CrossPairs { get => _crossRates; set => _crossRates = value; }
         public List<ExchangePair> CrossRatesByMarket { get => _crossRatesByMarket; set => _crossRatesByMarket = value; }
 
-        public void FindActualPairsAndCrossRates(BasicCryptoMarket[] marketsArray, string caller) {
+        public async Task FindActualPairsAndCrossRates(BasicCryptoMarket[] marketsArray, string caller) {
             _actualPairs.Clear();
             _crossRates.Clear();
             _crossRatesByMarket.Clear();
@@ -56,7 +57,16 @@ namespace CryptoAnalysatorWebApp.Models
             }
             
             for (int i = 0; i < marketsArray.Length; i++) {
-                FindCrossesOnMarket(marketsArray[i]);
+                BasicCryptoMarket market = marketsArray[i];
+                Console.WriteLine($"Market: {market.MarketName}  Time: {DateTime.Now}  TimeMlscnds: {DateTime.Now.Millisecond}");
+                if (market.MarketName == "Bittrex") {
+                    market = new BittrexMarket();
+                } else {
+                    await market.LoadPairs();   
+                }
+
+                FloydWarshell.FindCrossesOnMarket(market.MarketName, market.Currencies, market.Pairs,
+                    _crossRatesByMarket, new Dictionary<string, int> { ["BTC"] = 0, ["ETH"] = 0 });
             }
         }
 
@@ -149,188 +159,6 @@ namespace CryptoAnalysatorWebApp.Models
                 return actualPair;
             } else {
                 return null;
-            }
-        }
-
-        private void FindCrossesOnMarket(BasicCryptoMarket market) {
-            //PairsCollectionService pairsBeforeAnalysisCollection = new PairsCollectionService("PairsBeforeAnalysis");
-            //PairsCollectionService crossratesCollection = new PairsCollectionService("Crossrates");
-            
-            Console.WriteLine($"Market: {market.MarketName}  Time: {DateTime.Now}  TimeMlscnds: {DateTime.Now.Millisecond}");
-            market.LoadPairs(market.GetSummariesCommand);
-
-            double[,] currenciesMatrixPurchaseMin = new double[market.Currencies.Count, market.Currencies.Count];
-            double[,] currenciesMatrixSellMax = new double[market.Currencies.Count, market.Currencies.Count];
-
-            int[, ,] visitedPurchaseMin = new int[market.Currencies.Count, market.Currencies.Count, market.Currencies.Count];
-            int[, ,] visitedSellMax = new int[market.Currencies.Count, market.Currencies.Count, market.Currencies.Count];
-
-            int[,] nextPurchase = new int[market.Currencies.Count, market.Currencies.Count];
-            int[,] nextSell = new int[market.Currencies.Count, market.Currencies.Count];
-
-            int btcIndex = 0;
-            int ethIndex = 0;
-
-            for (int i = 0; i < market.Currencies.Count; i++) {
-                if (market.Currencies[i] == "BTC") {
-                    btcIndex = i;
-                }
-
-                if (market.Currencies[i] == "ETH") {
-                    ethIndex = i;
-                }
-                for (int j = 0; j < market.Currencies.Count; j++) {
-                    nextPurchase[i, j] = i;
-                    nextSell[i, j] = i;
-
-                    visitedPurchaseMin[i, j, i] = 1;
-                    visitedPurchaseMin[i, j, j] = 1;
-                    visitedSellMax[i, j, i] = 1;
-                    visitedSellMax[i, j, j] = 1;
-
-                    if (i == j) {
-                        currenciesMatrixPurchaseMin[i, j] = 1;
-                        currenciesMatrixSellMax[i, j] = 1;
-                        continue;
-                    }
-                    currenciesMatrixPurchaseMin[i, j] = int.MaxValue;
-                    currenciesMatrixSellMax[i, j] = 0;
-                }
-            }
-            
-            foreach (KeyValuePair<string, ExchangePair> pair in market.Pairs) {
-                string[] currencies = pair.Key.Split('-');
-                int index1 = market.Currencies.IndexOf(currencies[0]);
-                int index2 = market.Currencies.IndexOf(currencies[1]);
-
-                currenciesMatrixPurchaseMin[index1, index2] = (double)pair.Value.PurchasePrice;
-                currenciesMatrixPurchaseMin[index2, index1] = (double)(Math.Round(1 / pair.Value.SellPrice, 20));
-
-                currenciesMatrixSellMax[index1, index2] = (double)pair.Value.SellPrice;
-                currenciesMatrixSellMax[index2, index1] = (double)(Math.Round(1 / pair.Value.PurchasePrice, 20));
-            }
-            
-            //Алгоритм Флойда-Уоршелла нахождения кратчайших путей между всеми парами вершин
-            
-            for (int k = 0; k < market.Currencies.Count; k++) {
-                for (int i = 0; i < market.Currencies.Count; i++) {
-                    if (i != btcIndex && visitedPurchaseMin[btcIndex, i, nextPurchase[k, i]] != 1 && 
-                        currenciesMatrixPurchaseMin[btcIndex, i] - currenciesMatrixPurchaseMin[btcIndex, k] * 
-                        currenciesMatrixPurchaseMin[k, i] > 0.000001) {
-                        currenciesMatrixPurchaseMin[btcIndex, i] = currenciesMatrixPurchaseMin[btcIndex, k] * currenciesMatrixPurchaseMin[k, i];
-                        visitedPurchaseMin[btcIndex, i, nextPurchase[k, i]] = 1;
-                        nextPurchase[btcIndex, i] = nextPurchase[k, i];
-                    }
-                    
-                    if (i != ethIndex && visitedPurchaseMin[ethIndex, i, nextPurchase[k, i]] != 1 &&
-                        currenciesMatrixPurchaseMin[ethIndex, i] - currenciesMatrixPurchaseMin[ethIndex, k] *
-                        currenciesMatrixPurchaseMin[k, i] > 0.000001) {
-                        currenciesMatrixPurchaseMin[ethIndex, i] = currenciesMatrixPurchaseMin[ethIndex, k] * currenciesMatrixPurchaseMin[k, i];
-                        visitedPurchaseMin[ethIndex, i, nextPurchase[k, i]] = 1;
-                        nextPurchase[ethIndex, i] = nextPurchase[k, i];
-                    }
-                }
-            }
-
-            for (int k = 0; k < market.Currencies.Count; k++) {
-                for (int i = 0; i < market.Currencies.Count; i++) {
-                    if (i != btcIndex && visitedSellMax[btcIndex, i, nextSell[k, i]] != 1 && currenciesMatrixSellMax[btcIndex, i] - currenciesMatrixSellMax[btcIndex, k] * currenciesMatrixSellMax[k, i] < -0.0000001) {
-                        currenciesMatrixSellMax[btcIndex, i] = currenciesMatrixSellMax[btcIndex, k] * currenciesMatrixSellMax[k, i];
-                        visitedSellMax[btcIndex, i, nextSell[k, i]] = 1;
-                        nextSell[btcIndex, i] = nextSell[k, i];
-                    }
-                    if (i != ethIndex && visitedSellMax[ethIndex, i, nextSell[k, i]] != 1 && currenciesMatrixSellMax[ethIndex, i] - currenciesMatrixSellMax[ethIndex, k] * currenciesMatrixSellMax[k, i] < -0.0000001) {
-                        currenciesMatrixSellMax[ethIndex, i] = currenciesMatrixSellMax[ethIndex, k] * currenciesMatrixSellMax[k, i];
-                        visitedSellMax[ethIndex, i, nextSell[k, i]] = 1;
-                        nextSell[ethIndex, i] = nextSell[k, i];
-                    }
-                }
-            }
-
-            bool mustBeInsertedIntoDb = false;
-            for (int i = 0; i < market.Currencies.Count; i++) {
-                for (int j = 0; j < market.Currencies.Count; j++) {
-                    if (i != j && currenciesMatrixPurchaseMin[i, j] < currenciesMatrixSellMax[i, j] && (i == btcIndex || i == ethIndex)) {
-                        ExchangePair crossRatePair = new ExchangePair();
-                        try {
-                            crossRatePair.PurchasePath = GetPath(i, j, new List<int>(), nextPurchase, market.Currencies, market.Currencies[j]);
-                            crossRatePair.SellPath = GetPath(i, j, new List<int>(), nextSell, market.Currencies, market.Currencies[j]);
-                        } catch (Exception e) {
-                            //Console.WriteLine($"Exception: {e.Message}");
-                            continue;
-                        }
-                        crossRatePair.Market = market.MarketName;
-                        try {
-                            crossRatePair.PurchasePrice = (decimal)currenciesMatrixPurchaseMin[i, j];
-                            crossRatePair.SellPrice = (decimal)currenciesMatrixSellMax[i, j];
-                            if (crossRatePair.PurchasePrice > 0 && crossRatePair.SellPrice > 0) {
-                                crossRatePair.IsCross = true;
-                                crossRatePair.Spread = Math.Round((crossRatePair.SellPrice - crossRatePair.PurchasePrice) / crossRatePair.PurchasePrice * 100, 4);
-                                if (crossRatePair.Market == "Bittrex") {
-                                    ShowRates(crossRatePair.PurchasePath.Split('-'), true, market);
-                                    ShowRates(crossRatePair.SellPath.Split('-'), false, market);
-                                    mustBeInsertedIntoDb = true;
-                                    TimeService.AddCrossRateByMarketBittrex(crossRatePair);
-                                    //await crossratesCollection.Insert(crossRatePair);
-                                }
-                                _crossRatesByMarket.Add(crossRatePair);
-                                
-                                
-                            }
-                        } catch (Exception e) {
-
-                            //Console.WriteLine($"Exception! {e.Message}");
-                        }
-
-                    }
-                }
-            }
-            if (mustBeInsertedIntoDb) {
-                //await pairsBeforeAnalysisCollection.InsertMany(market.Pairs.Values.ToArray());
-            }
-        }
-
-        private string GetPath(int start, int curFinish, List<int> visited, int[,] nextArray, List<string> currencies, string result) {
-            visited.Add(curFinish);
-            if (visited.Contains(nextArray[start, curFinish])) {
-                throw new Exception("Incorrect path");
-            }
-    
-            if (nextArray[start, curFinish] == start) {
-                return $"{currencies[start]}-{result}";
-            }
-            
-            
-            return GetPath(start, nextArray[start, curFinish], visited, nextArray, currencies, $"{currencies[nextArray[start, curFinish]]}-{result}");
-        }
-
-        private void ShowRates(string[] devidedPath, bool purchase, BasicCryptoMarket market) {
-            if (purchase) {
-                for (int i = 0; i < devidedPath.Length - 1; i++) {
-                    string pair = devidedPath[i] + '-' + devidedPath[i + 1];
-                    if (!market.Pairs.ContainsKey(pair)) {
-                        pair = devidedPath[i + 1] + '-' + devidedPath[i];
-                        purchase = false;
-                    }
-
-                    Console.WriteLine(purchase
-                        ? $"{pair}  {market.Pairs[pair].PurchasePrice}  Buy"
-                        : $"{pair}  {market.Pairs[pair].SellPrice}  Sell");
-                }
-            } else {
-                Console.WriteLine("SellPathHere");
-                for (int i = devidedPath.Length - 1; i > 0; i--) {
-                    string pair = devidedPath[i - 1] + '-' + devidedPath[i];
-                    if (!market.Pairs.ContainsKey(pair)) {
-                        pair = devidedPath[i] + '-' + devidedPath[i - 1];
-                        purchase = true;
-                    }
-
-                    Console.WriteLine(purchase
-                        ? $"{pair}  {market.Pairs[pair].PurchasePrice}  Buy"
-                        : $"{pair}  {market.Pairs[pair].SellPrice}  Sell");
-                }
-                Console.WriteLine("SellPathComleted");
             }
         }
     }

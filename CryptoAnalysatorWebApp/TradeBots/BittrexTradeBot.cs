@@ -20,6 +20,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Telegram.Bot;
 using System.Diagnostics;
+using System.IO;
 using CryptoAnalysatorWebApp.Models.Db;
 
 namespace CryptoAnalysatorWebApp.TradeBots {
@@ -38,6 +39,15 @@ namespace CryptoAnalysatorWebApp.TradeBots {
             
             BalanceBtc = currencyBtc == null ? 0 : (decimal)currencyBtc["Available"];
             BalanceEth = currencyEth == null ? 0 : (decimal)currencyEth["Available"];
+            
+            foreach (var currency in currenciesOnBalance) {
+                string currencyName = (string)currency["Currency"];
+                walletBalances[currencyName] = (decimal)currency["Available"];
+            }
+            
+            //CheckOrder("3de9f9db-0cbb-4459-be88-7d3dc6f44f9c");
+            /*var ord = (string)GetOpenOrders().Result.Result[0]["OrderUuid"];
+            var res = CancelOrder(ord).Result;*/
         }
 
         public BittrexTradeBot(string baseUrl = "https://bittrex.com/api/v1.1/") : base(baseUrl) { }
@@ -76,6 +86,15 @@ namespace CryptoAnalysatorWebApp.TradeBots {
 
             return request;
         }
+
+        protected async Task<string> ExecuteReqAllPairs(string method) {
+                HttpRequestMessage request = CreateRequest(method, false, new Dictionary<string, string>());
+
+                HttpResponseMessage response = await httpClient.SendAsync(request);
+                string responseContent = await response.Content.ReadAsStringAsync();
+
+                return responseContent;
+        }
         
         protected override async Task<ResponseWrapper> ExecuteRequest(string method, bool includeAuth,
             Dictionary<string, string> parameters = null) {
@@ -88,7 +107,13 @@ namespace CryptoAnalysatorWebApp.TradeBots {
             HttpResponseMessage response = await httpClient.SendAsync(request);
             string responseContent = await response.Content.ReadAsStringAsync();
 
-            ResponseWrapper responseContentJson = JsonConvert.DeserializeObject<ResponseWrapper>(responseContent);
+            ResponseWrapper responseContentJson;
+            try {
+                responseContentJson = JsonConvert.DeserializeObject<ResponseWrapper>(responseContent);
+            } catch (Exception e) {
+                Console.WriteLine($"EXC WHILE EXC REQ: {response}");
+                throw;
+            }
             return responseContentJson;
         }
 
@@ -165,7 +190,9 @@ namespace CryptoAnalysatorWebApp.TradeBots {
             
             ExchangePair crossBittrex;
             lock (TimeService.TimeCrossesByMarket) {
-                crossBittrex = TimeService.TimeCrossesByMarket.Keys.FirstOrDefault(cross => cross.Market == "Bittrex");
+                DateTime maxDt = TimeService.TimeCrossesByMarket.Values.Max();
+                crossBittrex = TimeService.TimeCrossesByMarket
+                    .FirstOrDefault(d => d.Value.Equals(maxDt) && d.Key.PurchasePath.Split('-')[0] == "ETH").Key;
                 /*if (!canTradeWithBtc) {
                     crossBittrex = TimeService.TimeCrossesByMarket.Keys.FirstOrDefault(cross =>
                         cross.Market == "Bittrex" && cross.PurchasePath.Split('-')[0] == "ETH");
@@ -178,7 +205,8 @@ namespace CryptoAnalysatorWebApp.TradeBots {
                 }*/
             }
 
-            if (crossBittrex == null) {
+            if (crossBittrex == null || crossBittrex.Market != "Bittrex") {
+                signal.Reset();
                 goto RestartTrading;
             }
             
@@ -206,21 +234,21 @@ namespace CryptoAnalysatorWebApp.TradeBots {
             string[] devidedPurchasePath = crossBittrex.PurchasePath.ToUpper().Split('-').ToArray();
             string[] devidedSellPath = crossBittrex.SellPath.ToUpper().Split('-').ToArray();
             (decimal minEqualToBtc, decimal resultDealF) =
-                await FindMinAmountForTrade(devidedPurchasePath, devidedSellPath, (decimal)0.0007);//devidedPurchasePath[0] == "BTC" ? amountBtc : amountEth * allPairs["BTC-ETH"].PurchasePrice);
+                await FindMinAmountForTrade(devidedPurchasePath, devidedSellPath, (decimal) 0.0082); //* allPairs["BTC-ETH"].PurchasePrice);//devidedPurchasePath[0] == "BTC" ? amountBtc : amountEth * allPairs["BTC-ETH"].PurchasePrice);
             
-            if (minEqualToBtc * (decimal)0.97 < (decimal) 0.0005) {
+            /*if (minEqualToBtc * (decimal)0.97 < (decimal) 0.0005) {
                 client.SendTextMessageAsync(chatId, $"Crossrate is not efficient (minEqualToBtc:{minEqualToBtc}). Trading stopped");
                 signal.Reset();
                 goto RestartTrading;
-            }
+            }*/
 
             if (resultDealF <= 1) {
                 client.SendTextMessageAsync(chatId, $"Crossrate is not efficient (resultDealF: {resultDealF}). Trading stopped");
                 signal.Reset();
                 goto RestartTrading;
             }
-            
-            decimal myAmount = devidedPurchasePath[0] == "BTC" ? minEqualToBtc * (decimal)0.97 : minEqualToBtc / allPairs["BTC-ETH"].PurchasePrice * (decimal)0.97;
+
+            decimal myAmount = (decimal)0.0082;//devidedPurchasePath[0] == "BTC" ? minEqualToBtc * (decimal)0.97 : minEqualToBtc / allPairs["BTC-ETH"].PurchasePrice * (decimal)0.97;
             crossRateActualTime.Stop();
             client.SendTextMessageAsync(chatId, $"Trading amount: {myAmount}  resultDealF found: {resultDealF} Time: {crossRateActualTime.Elapsed}");
             //goto RestartTrading;
@@ -236,7 +264,7 @@ namespace CryptoAnalysatorWebApp.TradeBots {
 
                 if (purchase) {
                     try { 
-                        (myAmount, resultDealDone) = await BuyCurrency(myAmount, pair, resultDealDone);
+                        (myAmount, resultDealDone) = await BuyCurrency(myAmount, pair, resultDealDone, resultDealF);
                         client.SendTextMessageAsync(chatId, $"Pair: {pair}, Amount got: {myAmount} Type: BuyCurrency");
                     } catch (Exception e) {
                         Console.WriteLine($"Error while purchasing {crossBittrex.PurchasePath}: {pair}" +
@@ -245,7 +273,7 @@ namespace CryptoAnalysatorWebApp.TradeBots {
                     }
                 } else {
                     try { 
-                        (myAmount, resultDealDone) = await SellCurrency(myAmount, pair, resultDealDone, client, chatId);
+                        (myAmount, resultDealDone) = await SellCurrency(myAmount, pair, resultDealDone, resultDealF);
                         client.SendTextMessageAsync(chatId, $"Pair: {pair}, Amount got: {myAmount} Type: SellCurrency");
                     } catch (Exception e) {
                         Console.WriteLine($"Error while purchasing {crossBittrex.PurchasePath}: {pair}" +
@@ -266,7 +294,7 @@ namespace CryptoAnalysatorWebApp.TradeBots {
 
                 if (sell) {
                     try {
-                        (myAmount, resultDealDone) = await SellCurrency(myAmount, pair, resultDealDone, client, chatId);
+                        (myAmount, resultDealDone) = await SellCurrency(myAmount, pair, resultDealDone, resultDealF);
                         client.SendTextMessageAsync(chatId, $"Pair: {pair}, Amount got: {myAmount} Type: SellCurrency");
                     } catch (Exception e) {
                         Console.WriteLine($"Error while selling {crossBittrex.PurchasePath}: {pair}" +
@@ -275,7 +303,7 @@ namespace CryptoAnalysatorWebApp.TradeBots {
                     } 
                 } else {
                     try { 
-                        (myAmount, resultDealDone) = await BuyCurrency(myAmount, pair, resultDealDone);
+                        (myAmount, resultDealDone) = await BuyCurrency(myAmount, pair, resultDealDone, resultDealF);
                         client.SendTextMessageAsync(chatId, $"Pair: {pair}, Amount got: {myAmount} Type: BuyCurrency");
                     } catch (Exception e) {
                         Console.WriteLine($"Error while selling {crossBittrex.PurchasePath}: {pair}" +
@@ -285,15 +313,15 @@ namespace CryptoAnalysatorWebApp.TradeBots {
                 }
             }
             
-            TradeBotsStorage<ResponseWrapper>.DeleteTradeBot(chatId, "bittrex");
+            //TradeBotsStorage<ResponseWrapper>.DeleteTradeBot(chatId, "bittrex");
             client.SendTextMessageAsync(chatId, $"resultDealDone: {resultDealDone}");
-            client.SendTextMessageAsync(chatId, "Bot on bittrex has done his job and was destroyed");
+            client.SendTextMessageAsync(chatId, "Bot on bittrex has done his job");
         }
 
         
-        private async Task<(decimal, decimal)> BuyCurrency(decimal myAmount, string pair, decimal resultDealDone) {
+        private async Task<(decimal, decimal)> BuyCurrency(decimal myAmount, string pair, decimal resultDealDone, decimal resultDealF) {
             decimal buyRate = allPairs[pair].PurchasePrice;
-            decimal bestBuyRate = 0;
+            /*decimal bestBuyRate = 0;
 
             decimal boughtQuantityResult = 0;
             while (myAmount > 0) {
@@ -315,12 +343,20 @@ namespace CryptoAnalysatorWebApp.TradeBots {
                 }
             }
             
-            return (boughtQuantityResult, resultDealDone / (buyRate * (1 + FeeBuy)));
+            return (boughtQuantityResult, resultDealDone / (buyRate * (1 + FeeBuy)));*/
 
-            decimal buyQuantity = myAmount / (buyRate * (1 + FeeBuy));
+            decimal buyQuantity = decimal.Truncate((myAmount / (buyRate * (1 + FeeBuy))) * 100000000) / 100000000;
 
             ResponseWrapper responseBuyOrder = await CreateBuyOrder(pair, buyQuantity, buyRate);
-            string orderUuid = (string)responseBuyOrder.Result["uuid"];
+            string orderUuid;
+            Console.WriteLine(responseBuyOrder.Result);
+            try {
+                 orderUuid = (string)responseBuyOrder.Result["uuid"];
+            } catch (Exception e) {
+                Console.WriteLine($"EXCEPTION BUY: {responseBuyOrder.Message}");
+                throw;
+            }
+            
             
             if (!responseBuyOrder.Success) {
                 Console.WriteLine($"[ResponseError] Pair: {pair}, mess: {responseBuyOrder.Message} buyQuantity: {buyQuantity}{pair}" +
@@ -331,20 +367,23 @@ namespace CryptoAnalysatorWebApp.TradeBots {
             // (string checkOrder, decimal quantityBought, string orderUuid) = CheckOrder(orderUuid).Result;
             // Console.WriteLine($"[Check order]: {checkOrder}");
             var checkOrder = "";
+            decimal quantityRemains;
+            (checkOrder, quantityRemains) = await CheckOrder(orderUuid);
             while (checkOrder != "Ok") {
-                decimal quantityRemains;
-                (checkOrder, quantityRemains) = await CheckOrder(orderUuid);
                 Console.WriteLine($"[Check order]: {checkOrder} quantityRemains: {quantityRemains}");
+                
                 await Task.Delay(5000);
+                (checkOrder, quantityRemains) = await CheckOrder(orderUuid);
             }
             
             return (buyQuantity, resultDealDone / (buyRate * (1 + FeeBuy)));
         }
 
-        private async Task<(decimal, decimal)> SellCurrency(decimal myAmount, string pair, decimal resultDealDone, TelegramBotClient client, long chatId) {
+        private async Task<(decimal, decimal)> SellCurrency(decimal myAmount, string pair, decimal resultDealDone, decimal resultDealF) {
             decimal sellRate = allPairs[pair].SellPrice;
-            decimal bestSellRate = 0;
+            /*decimal bestSellRate = 0;
 
+            Console.WriteLine($"MyAmount: {myAmount}");
             decimal gotQuantityRemember = 0;
             while (myAmount > 0) {
                 JArray buyOrders = (JArray)GetOrderBook(pair).Result.Result["buy"];
@@ -360,18 +399,24 @@ namespace CryptoAnalysatorWebApp.TradeBots {
                     myAmount -= bestSellQuantity;
                     gotQuantityRemember += bestSellQuantity * (bestSellRate * (1 - FeeSell));
                 } else {
-                    myAmount = 0;
                     gotQuantityRemember += myAmount * (bestSellRate * (1 - FeeSell));
+                    myAmount = 0;
                 }
 
             }
+            Console.WriteLine($"gotQuantityRemember {gotQuantityRemember}");
 
-            return (gotQuantityRemember, resultDealDone * (sellRate * (1 - FeeSell)));
-            
+            return (gotQuantityRemember, resultDealDone * (sellRate * (1 - FeeSell)));*/
             decimal sellQuantity = myAmount;
 
             ResponseWrapper responseSellOrder = await CreateSellORder(pair, sellQuantity, sellRate);
-            string orderUuid = (string)responseSellOrder.Result["uuid"];
+            string orderUuid;
+            try {
+                orderUuid = (string)responseSellOrder.Result["uuid"];
+            } catch (Exception e) {
+                Console.WriteLine($"EXCEPTION BUY: {responseSellOrder.Message}");
+                throw;
+            }
             
             if (!responseSellOrder.Success) {
                 Console.WriteLine($"[ResponseError] Pair: {pair}, mess: {responseSellOrder.Message}");
@@ -382,19 +427,25 @@ namespace CryptoAnalysatorWebApp.TradeBots {
             //Console.WriteLine($"After SellLimit checkOrder:{checkOrder} quantitySold:{quantitySold}");
             
             var checkOrder = "";
+            decimal quantityRemains;
+            (checkOrder, quantityRemains) = await CheckOrder(orderUuid);
             while (checkOrder != "Ok") {
-                decimal quantityRemains;
-                (checkOrder, quantityRemains) = await CheckOrder(orderUuid);
                 Console.WriteLine($"[Check order]: {checkOrder} quantityRemains: {quantityRemains}");
+                //поиск лучших цепочек с валютой, ордер которой висит
                 await Task.Delay(5000);
+                (checkOrder, quantityRemains) = await CheckOrder(orderUuid);
             }
 
-            return (sellQuantity * (sellRate * (1 - FeeSell)), resultDealDone * (sellRate * (1 - FeeSell)));
+            return (decimal.Truncate((sellQuantity * (sellRate * (1 - FeeSell))) * 100000000) / 100000000, resultDealDone * (sellRate * (1 - FeeSell)));
         }
 
         private async Task<(string, decimal)> CheckOrder(string orderUuid) {
+            await Task.Delay(500);
             var responseOpenOrders = await GetOpenOrders();
             var ordersArr = ((JArray) responseOpenOrders.Result);
+            Console.WriteLine(ordersArr.ToString());
+            Console.WriteLine(responseOpenOrders.Message);
+            Console.WriteLine(orderUuid);
             if (ordersArr.Count == 0 || ordersArr.Where(ord => (string)ord["OrderUuid"] == orderUuid).ToArray().Length == 0) {
                 return ("Ok", 0);
             }
@@ -458,7 +509,7 @@ namespace CryptoAnalysatorWebApp.TradeBots {
             await Task.WhenAll(exchangeProcessTasks.ConvertAll(x => x.Item1));
             timeFindingMinEq.Stop();
             Console.WriteLine($"Time  {timeFindingMinEq.Elapsed.Milliseconds}  Now  {DateTime.Now}  TimeMlscnds: {DateTime.Now.Millisecond}");
-            
+
             Console.WriteLine("FOR TRADING");
             foreach (var deal in exchangeProcessTasks) {
                 Console.WriteLine($"DEAL: {deal.Item3}");

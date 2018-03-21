@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Threading.Tasks;
 using CryptoAnalysatorWebApp.Interfaces;
+using Newtonsoft.Json.Linq;
 
 namespace CryptoAnalysatorWebApp.Models.Common
 {
@@ -15,18 +17,20 @@ namespace CryptoAnalysatorWebApp.Models.Common
         protected readonly Dictionary<string, ExchangePair> _pairs;
         protected readonly Dictionary<string, ExchangePair> _crossRates;
         protected readonly Dictionary<string, List<ExchangePair>> _crossRatesGroups;
-        protected List<string> _currencies;
+        private List<string> _currencies;
+        private string _resp;
 
         public string MarketName { get => marketName; }
         public Dictionary<string, ExchangePair> Pairs { get => _pairs; }
         public Dictionary<string, ExchangePair> Crosses { get => _crossRates; }
         public Dictionary<string, List<ExchangePair>> CrossesGroups { get => _crossRatesGroups; }
         public List<string> Currencies { get => _currencies; }
+        public string Resp { get => _resp; }
 
         protected readonly decimal _feeTaker;
         protected readonly decimal _feeMaker;
 
-        public BasicCryptoMarket(string url, string command, decimal feeTaker, decimal feeMaker, string orderBookCommand, string marketName) {
+        protected BasicCryptoMarket(string url, string command, decimal feeTaker, decimal feeMaker, string orderBookCommand, string marketName) {
             this.marketName = marketName;
             _pairs = new Dictionary<string, ExchangePair>();
             _crossRates = new Dictionary<string, ExchangePair>();
@@ -36,14 +40,19 @@ namespace CryptoAnalysatorWebApp.Models.Common
             this.orderBookCommand = orderBookCommand;
             _feeTaker = feeTaker;
             _feeMaker = feeMaker;
-            LoadPairs(command);
+            LoadPairs(command).Wait();
             CollectCurrencies();
         }
 
-        public void LoadPairs(string command) {
+        public async Task LoadPairs(string command = null) {
+            if (command == null) {
+                command = GetSummariesCommand;
+            }
+            
             _pairs.Clear();
             try {
-                string response = GetResponse(basicUrl + command);
+                string response = await GetResponse(basicUrl + command);
+                _resp = response;
                 ProcessResponsePairs(response);
             } catch (Exception e) {
                 Console.WriteLine("Error in ProcessResponsePairs" + this.MarketName);
@@ -51,7 +60,7 @@ namespace CryptoAnalysatorWebApp.Models.Common
             }
         }
 
-        public abstract decimal LoadOrder(string currencyPair, bool isSeller, bool reversePice);
+        public abstract Task<decimal> LoadOrder(string currencyPair, bool isSeller, bool reversePice);
 
         protected abstract void ProcessResponsePairs(string response);
 
@@ -144,18 +153,24 @@ namespace CryptoAnalysatorWebApp.Models.Common
             _crossRates.Remove(name);
         }
 
-        public static string GetResponse(string url, bool check = false) {
-            Console.WriteLine($"Trying to get url {url}");
+        public static async Task<string> GetResponse(string url, bool check = false) {
             using (HttpClient client = new HttpClient()) {
-                    using (HttpResponseMessage response = client.GetAsync(check ? $"{url}&check=true" : url).Result) {
-                        Console.WriteLine($"Got {response.StatusCode}.");
+                    using (HttpResponseMessage response = await client.GetAsync(check ? $"{url}&check=true" : url)) {
                         using (HttpContent content = response.Content) {
                             string responseStr = content.ReadAsStringAsync().Result;
-                            Console.WriteLine("Success.");
                             return responseStr;
                         }
                     }
                 }
+        }
+        
+        public async Task GetRealPrices(string pairName) {
+            if (_pairs.ContainsKey(pairName) && _pairs[pairName] != null) {
+                string resp = await GetResponse(basicUrl + $"getorderbook?market={pairName}&type=both");
+                var responseJson = JObject.Parse(resp)["result"];
+                _pairs[pairName].PurchasePrice = (decimal)responseJson["sell"][0]["Rate"] * (1 + _feeTaker);
+                _pairs[pairName].SellPrice = (decimal)responseJson["buy"][0]["Rate"] * (1 - _feeMaker);
+            }
         }
     }
 }

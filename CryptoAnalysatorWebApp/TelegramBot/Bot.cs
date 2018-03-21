@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Telegram.Bot;
 using CryptoAnalysatorWebApp.TelegramBot.Commands.Common;
 using CryptoAnalysatorWebApp.TelegramBot.Commands;
@@ -41,7 +42,7 @@ namespace CryptoAnalysatorWebApp.TelegramBot
             _commands.Add(new DeleteBotCommand());
 
             _client = new TelegramBotClient(BotSettings.AccessToken);
-            _client.SetWebhookAsync("https://a48cdfde.ngrok.io/api/telegrambot").Wait();
+            _client.SetWebhookAsync("https://7e3a3dba.ngrok.io/api/telegrambot").Wait();
 
             return _client;
         }
@@ -55,14 +56,23 @@ namespace CryptoAnalysatorWebApp.TelegramBot
             DateTime maxDateTimePairs = DateTime.Now;
             DateTime maxDateTimeCrosses = DateTime.Now;
             DateTime maxDateTimeCrossesByMarket = DateTime.Now;
+            
+            BasicCryptoMarket[] marketsArray = { new PoloniexMarket(), new ExmoMarket(), new BinanceMarket(), new LivecoinMarket(), new BittrexMarket() };
+            PairsAnalysator pairsAnalysator = new PairsAnalysator();
+            
             while (true) {
                 string message = "";
 
                 Console.WriteLine($"Bot Works In Channel");
-                PairsAnalysator pairsAnalysator = new PairsAnalysator();
+                
 
-                BasicCryptoMarket[] marketsArray = { new PoloniexMarket(), new ExmoMarket(), new BinanceMarket(), new LivecoinMarket(), new BittrexMarket() };
-                pairsAnalysator.FindActualPairsAndCrossRates(marketsArray, "bot");
+                await Task.WhenAll(marketsArray.Select(market => market.LoadPairs()));
+
+                try {
+                    await pairsAnalysator.FindActualPairsAndCrossRates(marketsArray, "bot");
+                } catch (Exception e) {
+                    Console.WriteLine($"Exception while finding crossrates : {e.Message}  {e.StackTrace}");
+                }
 
                 Dictionary<string, List<ExchangePair>> pairsDic = new Dictionary<string, List<ExchangePair>>();
                 pairsDic["crosses"] = pairsAnalysator.CrossPairs.OrderByDescending(p => p.Spread).ToList();

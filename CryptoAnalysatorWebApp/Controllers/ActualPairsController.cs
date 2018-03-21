@@ -7,6 +7,7 @@ using CryptoAnalysatorWebApp.Models.Common;
 using CryptoAnalysatorWebApp.Models;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace CryptoAnalysatorWebApp.Controllers {
     [Route("api/[controller]")]
@@ -31,10 +32,10 @@ namespace CryptoAnalysatorWebApp.Controllers {
         // GET api/actualpairs
         [HttpGet]
         [Produces("application/json")]
-        public IActionResult Get() {
+        public async Task<IActionResult> Get() {
 
             BasicCryptoMarket[] marketsArray = { _poloniexMarket, _bittrexMarket, _exmoMarket, _binanceMarket, _livecoinMarket};
-            _pairsAnalysator.FindActualPairsAndCrossRates(marketsArray, "contr");
+            await _pairsAnalysator.FindActualPairsAndCrossRates(marketsArray, "contr");
 
             Dictionary<string, List<ExchangePair>> pairsDic = new Dictionary<string, List<ExchangePair>>();
             pairsDic["crosses"] = _pairsAnalysator.CrossPairs.OrderByDescending(p => p.Spread).ToList();
@@ -47,7 +48,7 @@ namespace CryptoAnalysatorWebApp.Controllers {
         //GET api/actualpairs/btc-ltc?seller=poloniex&buyer=bittrex&isCross=false
         [HttpGet("{curPair}")]
         [Produces("application/json")]  
-        public IActionResult Get(string curPair, [FromQuery]string seller, [FromQuery]string buyer, [FromQuery]bool isCross) {
+        public async Task<IActionResult> Get(string curPair, [FromQuery]string seller, [FromQuery]string buyer, [FromQuery]bool isCross) {
 
             decimal resPurchasePrice = 0;
             decimal resSellPrice = 0;
@@ -69,82 +70,82 @@ namespace CryptoAnalysatorWebApp.Controllers {
                 if (!isCross) {
                     switch (seller) {
                         case "poloniex":
-                            resPurchasePrice = _poloniexMarket.LoadOrder(curPair.ToUpper(), true);
+                            resPurchasePrice = await _poloniexMarket.LoadOrder(curPair.ToUpper(), true);
                             break;
                         case "bittrex":
-                            resPurchasePrice = _bittrexMarket.LoadOrder(curPair.ToUpper(), true);
+                            resPurchasePrice = await _bittrexMarket.LoadOrder(curPair.ToUpper(), true);
                             break;
                         case "exmo":
-                            resPurchasePrice = _exmoMarket.LoadOrder(curPair.ToUpper(), true);
+                            resPurchasePrice = await _exmoMarket.LoadOrder(curPair.ToUpper(), true);
                             break;
                         case "binance":
-                            resPurchasePrice = _binanceMarket.LoadOrder(curPair.ToUpper(), true);
+                            resPurchasePrice = await _binanceMarket.LoadOrder(curPair.ToUpper(), true);
                             break;
                         case "livecoin":
-                            resPurchasePrice = _livecoinMarket.LoadOrder(curPair.ToUpper(), true);
+                            resPurchasePrice = await _livecoinMarket.LoadOrder(curPair.ToUpper(), true);
                             break;
                     }
                     switch (buyer) {
                         case "poloniex":
-                            resSellPrice = _poloniexMarket.LoadOrder(curPair.ToUpper(), false);
+                            resSellPrice = await _poloniexMarket.LoadOrder(curPair.ToUpper(), false);
                             break;
                         case "bittrex":
-                            resSellPrice = _bittrexMarket.LoadOrder(curPair.ToUpper(), false);
+                            resSellPrice = await _bittrexMarket.LoadOrder(curPair.ToUpper(), false);
                             break;
                         case "exmo":
-                            resSellPrice = _exmoMarket.LoadOrder(curPair.ToUpper(), false);
+                            resSellPrice = await _exmoMarket.LoadOrder(curPair.ToUpper(), false);
                             break;
                         case "binance":
-                            resSellPrice = _binanceMarket.LoadOrder(curPair.ToUpper(), false);
+                            resSellPrice = await _binanceMarket.LoadOrder(curPair.ToUpper(), false);
                             break;
                         case "livecoin":
-                            resSellPrice = _livecoinMarket.LoadOrder(curPair.ToUpper(), false);
+                            resSellPrice = await _livecoinMarket.LoadOrder(curPair.ToUpper(), false);
                             break;
                     }
                 } else {
                     string[] devidedPairs = curPair.Split('-');
                     switch (seller) {
                         case "poloniex":
-                            resPurchasePrice = _poloniexMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[2]}", true) /
-                                _poloniexMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[0]}", false);
+                            resPurchasePrice = await _poloniexMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[2]}", true) /
+                                               await _poloniexMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[0]}", false);
                             break;
                         case "bittrex":
-                            resPurchasePrice = _bittrexMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[2]}", true) /
-                                _bittrexMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[0]}", false);
+                            resPurchasePrice = await _bittrexMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[2]}", true) /
+                                               await _bittrexMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[0]}", false);
                             break;
                         case "exmo":
-                            resPurchasePrice = _exmoMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[2]}", true) /
-                                _exmoMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[0]}", false);
+                            resPurchasePrice = await _exmoMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[2]}", true) /
+                                               await _exmoMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[0]}", false);
                             break;
                         case "binance":
-                            resPurchasePrice = _binanceMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[2]}", true) /
-                                _binanceMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[0]}", false);
+                            resPurchasePrice = await _binanceMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[2]}", true) /
+                                               await _binanceMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[0]}", false);
                             break;
                         case "livecoin":
-                            resPurchasePrice = _livecoinMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[2]}", true) /
-                                               _livecoinMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[0]}", false);
+                            resPurchasePrice = await _livecoinMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[2]}", true) /
+                                               await _livecoinMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[0]}", false);
                             break;
                     }
                     switch (buyer) {
                         case "poloniex":
-                            resSellPrice = _poloniexMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[2]}", false) /
-                                _poloniexMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[0]}", true);
+                            resSellPrice = await _poloniexMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[2]}", false) /
+                                           await _poloniexMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[0]}", true);
                             break;
                         case "bittrex":
-                            resSellPrice = _bittrexMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[2]}", false) /
-                                _bittrexMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[0]}", true);
+                            resSellPrice = await _bittrexMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[2]}", false) /
+                                           await _bittrexMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[0]}", true);
                             break;
                         case "exmo":
-                            resSellPrice = _exmoMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[2]}", false) /
-                                _exmoMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[0]}", true);
+                            resSellPrice = await _exmoMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[2]}", false) /
+                                           await _exmoMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[0]}", true);
                             break;
                         case "binance":
-                            resSellPrice = _binanceMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[2]}", false) /
-                                _binanceMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[0]}", true);
+                            resSellPrice = await _binanceMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[2]}", false) /
+                                           await _binanceMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[0]}", true);
                             break;
                         case "livecoin":
-                            resSellPrice = _livecoinMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[2]}", false) /
-                                           _livecoinMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[0]}", true);
+                            resSellPrice = await _livecoinMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[2]}", false) /
+                                           await _livecoinMarket.LoadOrder($"{devidedPairs[1]}-{devidedPairs[0]}", true);
                             break;
                     }
                 }
@@ -180,7 +181,7 @@ namespace CryptoAnalysatorWebApp.Controllers {
         // GET /api/actualpairs/crossMarket/poloniex?purchasepath=btc-ltc&sellpath=btc-eth-ltc
         [HttpGet("crossMarket/{market}")]
         [Produces("application/json")]
-        public IActionResult GetCrossByMarketRelevance (string market, [FromQuery]string purchasepath, [FromQuery]string sellpath) {
+        public async Task<IActionResult> GetCrossByMarketRelevance (string market, [FromQuery]string purchasepath, [FromQuery]string sellpath) {
             decimal resPurchasePrice = 1;
             decimal resSellPrice = 1;
             decimal newSpread = 0;
@@ -199,27 +200,27 @@ namespace CryptoAnalysatorWebApp.Controllers {
                 switch (market.ToLower()) {
                     case "poloniex":
                         for (int i = 0; i <= devidedPurchasePath.Length - 2; i++) {
-                            resPurchasePrice *= _poloniexMarket.LoadOrder($"{devidedPurchasePath[i]}-{devidedPurchasePath[i + 1]}", true);
+                            resPurchasePrice *= await _poloniexMarket.LoadOrder($"{devidedPurchasePath[i]}-{devidedPurchasePath[i + 1]}", true);
                         }
                         break;
                     case "bittrex":
                         for (int i = 0; i <= devidedPurchasePath.Length - 2; i++) {
-                            resPurchasePrice *= _bittrexMarket.LoadOrder($"{devidedPurchasePath[i]}-{devidedPurchasePath[i + 1]}", true);
+                            resPurchasePrice *= await _bittrexMarket.LoadOrder($"{devidedPurchasePath[i]}-{devidedPurchasePath[i + 1]}", true);
                         }
                         break;
                     case "exmo":
                         for (int i = 0; i <= devidedPurchasePath.Length - 2; i++) {
-                            resPurchasePrice *= _exmoMarket.LoadOrder($"{devidedPurchasePath[i]}-{devidedPurchasePath[i + 1]}", true);
+                            resPurchasePrice *= await _exmoMarket.LoadOrder($"{devidedPurchasePath[i]}-{devidedPurchasePath[i + 1]}", true);
                         }
                         break;
                     case "binance":
                         for (int i = 0; i <= devidedPurchasePath.Length - 2; i++) {
-                            resPurchasePrice *= _binanceMarket.LoadOrder($"{devidedPurchasePath[i]}-{devidedPurchasePath[i + 1]}", true);
+                            resPurchasePrice *= await _binanceMarket.LoadOrder($"{devidedPurchasePath[i]}-{devidedPurchasePath[i + 1]}", true);
                         }
                         break;
                     case "livecoin":
                         for (int i = 0; i <= devidedPurchasePath.Length - 2; i++) {
-                            decimal newOrder = _livecoinMarket.LoadOrder($"{devidedPurchasePath[i]}-{devidedPurchasePath[i + 1]}", true);
+                            decimal newOrder = await _livecoinMarket.LoadOrder($"{devidedPurchasePath[i]}-{devidedPurchasePath[i + 1]}", true);
                             resPurchasePrice *= newOrder;
                             /*using (StreamWriter sw = System.IO.File.AppendText("..\\ControllerCheckPurchase.txt")) {
                                 sw.WriteLine($"{devidedPurchasePath[i]}-{devidedPurchasePath[i + 1]}  {newOrder}");
@@ -233,30 +234,30 @@ namespace CryptoAnalysatorWebApp.Controllers {
                     case "poloniex":
                         for (int i = devidedSellPath.Length - 1; i > 0; i--) {
                             Console.WriteLine("GO ON");
-                            resSellPrice *= _poloniexMarket.LoadOrder($"{devidedSellPath[i - 1]}-{devidedSellPath[i]}", false, false);
+                            resSellPrice *= await _poloniexMarket.LoadOrder($"{devidedSellPath[i - 1]}-{devidedSellPath[i]}", false, false);
                         }
                         break;
                     case "bittrex":
                         for (int i = devidedSellPath.Length - 1; i > 0; i--) {
                             Console.WriteLine("GO ON");
-                            resSellPrice *= _bittrexMarket.LoadOrder($"{devidedSellPath[i - 1]}-{devidedSellPath[i]}", false, false);
+                            resSellPrice *= await _bittrexMarket.LoadOrder($"{devidedSellPath[i - 1]}-{devidedSellPath[i]}", false, false);
                         }
                         break;
                     case "exmo":
                         for (int i = devidedSellPath.Length - 1; i > 0; i--) {
                             Console.WriteLine("GO ON");
-                            resSellPrice *= _exmoMarket.LoadOrder($"{devidedSellPath[i - 1]}-{devidedSellPath[i]}", false, false);
+                            resSellPrice *= await _exmoMarket.LoadOrder($"{devidedSellPath[i - 1]}-{devidedSellPath[i]}", false, false);
                         }
                         break;
                     case "binance":
                         for (int i = devidedSellPath.Length - 1; i > 0; i--) {
                             Console.WriteLine("GO ON");
-                            resSellPrice *= _binanceMarket.LoadOrder($"{devidedSellPath[i - 1]}-{devidedSellPath[i]}", false, false);
+                            resSellPrice *= await _binanceMarket.LoadOrder($"{devidedSellPath[i - 1]}-{devidedSellPath[i]}", false, false);
                         }
                         break;
                     case "livecoin":
                         for (int i = devidedSellPath.Length - 1; i > 0; i--) {
-                            decimal newOrder = _livecoinMarket.LoadOrder($"{devidedSellPath[i - 1]}-{devidedSellPath[i]}", false, false);
+                            decimal newOrder = await _livecoinMarket.LoadOrder($"{devidedSellPath[i - 1]}-{devidedSellPath[i]}", false, false);
                             resSellPrice *= newOrder;
                         }
                         break;

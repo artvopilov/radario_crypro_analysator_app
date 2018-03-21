@@ -2,6 +2,7 @@
 using CryptoAnalysatorWebApp.Models.Common;
 using Newtonsoft.Json.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace CryptoAnalysatorWebApp.Models
 {
@@ -44,7 +45,7 @@ namespace CryptoAnalysatorWebApp.Models
             Console.WriteLine("[INFO] BinanceMarket is ready");
         }
 
-        public override decimal LoadOrder(string currencyPair, bool isSeller, bool reversePice = false) {
+        public override async Task<decimal> LoadOrder(string currencyPair, bool isSeller, bool reversePice = false) {
             if (!_pairs.ContainsKey(currencyPair)) {
                 currencyPair = $"{currencyPair.Split('-')[1]}-{currencyPair.Split('-')[0]}";
                 isSeller = isSeller != true;
@@ -53,7 +54,7 @@ namespace CryptoAnalysatorWebApp.Models
 
             string[] currencyPairSplited = currencyPair.Split('-');
             string query = basicUrl + orderBookCommand + $"?symbol={currencyPairSplited[1]}{currencyPairSplited[0]}";
-            string response = GetResponse(query);
+            string response = await GetResponse(query);
 
             JObject responseJson = JObject.Parse(response);
             if (isSeller) {

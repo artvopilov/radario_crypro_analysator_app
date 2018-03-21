@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using CryptoAnalysatorWebApp.Models;
 
 namespace CryptoAnalysatorWebApp.Interfaces
@@ -9,7 +10,7 @@ namespace CryptoAnalysatorWebApp.Interfaces
         Dictionary<string, ExchangePair> Pairs { get;  }
         Dictionary<string, ExchangePair> Crosses { get; }
 
-        void LoadPairs(string command);
+        Task LoadPairs(string command);
 
         ExchangePair GetPairByName(string name);
         ExchangePair GetCrossByName(string name);
