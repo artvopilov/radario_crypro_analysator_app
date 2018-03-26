@@ -40,9 +40,11 @@ namespace CryptoAnalysatorWebApp.TelegramBot
             _commands.Add(new TradeCommand());
             _commands.Add(new HelpCommand());
             _commands.Add(new DeleteBotCommand());
+            _commands.Add(new GetOpenOrdersCommand());
+            _commands.Add(new CancelOrderCommand());
 
             _client = new TelegramBotClient(BotSettings.AccessToken);
-            _client.SetWebhookAsync("https://7e3a3dba.ngrok.io/api/telegrambot").Wait();
+            _client.SetWebhookAsync("https://e8c195f3.ngrok.io/api/telegrambot").Wait();
 
             return _client;
         }

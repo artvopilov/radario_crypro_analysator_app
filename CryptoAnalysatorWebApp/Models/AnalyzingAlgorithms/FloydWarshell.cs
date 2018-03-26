@@ -6,39 +6,26 @@ using CryptoAnalysatorWebApp.Models.Common;
 
 namespace CryptoAnalysatorWebApp.Models.AnalyzingAlgorithms {
     public static class FloydWarshell {
-         public static void FindCrossesOnMarket(string marketName, List<string> marketCurrencies, Dictionary<string, ExchangePair> marketPairs, List<ExchangePair> crossRatesByMarket, Dictionary<string, int> curStartChain) {
-            double[,] currenciesMatrixPurchaseMin = new double[marketCurrencies.Count, marketCurrencies.Count];
-            double[,] currenciesMatrixSellMax = new double[marketCurrencies.Count, marketCurrencies.Count];
+         public static void FindCrossesOnMarket(ref List<ExchangePair> crossRatesByMarket,
+             Dictionary<string, int> curStartChain, BasicCryptoMarket market, bool needToSaveInTimeService = true) {
+             
+            double[,] currenciesMatrixPurchaseMin = new double[market.Currencies.Count, market.Currencies.Count];
+            double[,] currenciesMatrixSellMax = new double[market.Currencies.Count, market.Currencies.Count];
 
-            int[, ,] visitedPurchaseMin = new int[marketCurrencies.Count, marketCurrencies.Count, marketCurrencies.Count];
-            int[, ,] visitedSellMax = new int[marketCurrencies.Count, marketCurrencies.Count, marketCurrencies.Count];
+            int[, ,] visitedPurchaseMin = new int[market.Currencies.Count, market.Currencies.Count, market.Currencies.Count];
+            int[, ,] visitedSellMax = new int[market.Currencies.Count, market.Currencies.Count, market.Currencies.Count];
 
-            int[,] nextPurchase = new int[marketCurrencies.Count, marketCurrencies.Count];
-            int[,] nextSell = new int[marketCurrencies.Count, marketCurrencies.Count];
+            int[,] nextPurchase = new int[market.Currencies.Count, market.Currencies.Count];
+            int[,] nextSell = new int[market.Currencies.Count, market.Currencies.Count];
 
-            /*int btcIndex = 0;
-            int ethIndex = 0;
-            int usdtIndex = 0;*/
-
-            for (int i = 0; i < marketCurrencies.Count; i++) {
+            for (int i = 0; i < market.Currencies.Count; i++) {
                 foreach (string cur in curStartChain.Keys.ToArray()) { 
-                    if (marketCurrencies[i] == cur) {
+                    if (market.Currencies[i] == cur) {
                         curStartChain[cur] = i;
                     }
                 }
-                
-                /*if (marketCurrencies[i] == "BTC") {
-                    btcIndex = i;
-                }
 
-                if (marketCurrencies[i] == "ETH") {
-                    ethIndex = i;
-                }
-
-                if (marketCurrencies[i] == "PAY") {
-                    usdtIndex = i;
-                }*/
-                for (int j = 0; j < marketCurrencies.Count; j++) {
+                for (int j = 0; j < market.Currencies.Count; j++) {
                     nextPurchase[i, j] = i;
                     nextSell[i, j] = i;
 
@@ -57,10 +44,10 @@ namespace CryptoAnalysatorWebApp.Models.AnalyzingAlgorithms {
                 }
             }
             
-            foreach (KeyValuePair<string, ExchangePair> pair in marketPairs) {
+            foreach (KeyValuePair<string, ExchangePair> pair in market.Pairs) {
                 string[] currencies = pair.Key.Split('-');
-                int index1 = marketCurrencies.IndexOf(currencies[0]);
-                int index2 = marketCurrencies.IndexOf(currencies[1]);
+                int index1 = market.Currencies.IndexOf(currencies[0]);
+                int index2 = market.Currencies.IndexOf(currencies[1]);
 
                 currenciesMatrixPurchaseMin[index1, index2] = (double)pair.Value.PurchasePrice;
                 currenciesMatrixPurchaseMin[index2, index1] = (double)(Math.Round(1 / pair.Value.SellPrice, 20));
@@ -71,12 +58,12 @@ namespace CryptoAnalysatorWebApp.Models.AnalyzingAlgorithms {
             
             //Алгоритм Флойда-Уоршелла нахождения кратчайших путей между всеми парами вершин
             
-            for (int k = 0; k < marketCurrencies.Count; k++) {
-                for (int i = 0; i < marketCurrencies.Count; i++) {
+            for (int k = 0; k < market.Currencies.Count; k++) {
+                for (int i = 0; i < market.Currencies.Count; i++) {
                     foreach (int curIndex in curStartChain.Values) {
                         if (i != curIndex && visitedPurchaseMin[curIndex, i, nextPurchase[k, i]] != 1 && 
                             currenciesMatrixPurchaseMin[curIndex, i] - currenciesMatrixPurchaseMin[curIndex, k] * 
-                            currenciesMatrixPurchaseMin[k, i] > 0.000001) {
+                            currenciesMatrixPurchaseMin[k, i] > 0.00000001) {
                             currenciesMatrixPurchaseMin[curIndex, i] = currenciesMatrixPurchaseMin[curIndex, k] * currenciesMatrixPurchaseMin[k, i];
                             visitedPurchaseMin[curIndex, i, nextPurchase[k, i]] = 1;
                             nextPurchase[curIndex, i] = nextPurchase[k, i];
@@ -85,10 +72,10 @@ namespace CryptoAnalysatorWebApp.Models.AnalyzingAlgorithms {
                 }
             }
 
-            for (int k = 0; k < marketCurrencies.Count; k++) {
-                for (int i = 0; i < marketCurrencies.Count; i++) {
+            for (int k = 0; k < market.Currencies.Count; k++) {
+                for (int i = 0; i < market.Currencies.Count; i++) {
                     foreach (int curIndex in curStartChain.Values) {
-                        if (i != curIndex && visitedSellMax[curIndex, i, nextSell[k, i]] != 1 && currenciesMatrixSellMax[curIndex, i] - currenciesMatrixSellMax[curIndex, k] * currenciesMatrixSellMax[k, i] < -0.0000001) {
+                        if (i != curIndex && visitedSellMax[curIndex, i, nextSell[k, i]] != 1 && currenciesMatrixSellMax[curIndex, i] - currenciesMatrixSellMax[curIndex, k] * currenciesMatrixSellMax[k, i] < -0.00000001) {
                             currenciesMatrixSellMax[curIndex, i] = currenciesMatrixSellMax[curIndex, k] * currenciesMatrixSellMax[k, i];
                             visitedSellMax[curIndex, i, nextSell[k, i]] = 1;
                             nextSell[curIndex, i] = nextSell[k, i];
@@ -97,27 +84,27 @@ namespace CryptoAnalysatorWebApp.Models.AnalyzingAlgorithms {
                 }
             }
 
-            for (int i = 0; i < marketCurrencies.Count; i++) {
-                for (int j = 0; j < marketCurrencies.Count; j++) {
+            for (int i = 0; i < market.Currencies.Count; i++) {
+                for (int j = 0; j < market.Currencies.Count; j++) {
                     if (i != j && currenciesMatrixPurchaseMin[i, j] < currenciesMatrixSellMax[i, j] && curStartChain.Values.Contains(i)) {
                         ExchangePair crossRatePair = new ExchangePair();
                         try {
-                            crossRatePair.PurchasePath = GetPath(i, j, new List<int>(), nextPurchase, marketCurrencies, marketCurrencies[j]);
-                            crossRatePair.SellPath = GetPath(i, j, new List<int>(), nextSell, marketCurrencies, marketCurrencies[j]);
+                            crossRatePair.PurchasePath = GetPath(i, j, new List<int>(), nextPurchase, market.Currencies, market.Currencies[j]);
+                            crossRatePair.SellPath = GetPath(i, j, new List<int>(), nextSell, market.Currencies, market.Currencies[j]);
                         } catch (Exception e) {
                             //Console.WriteLine($"Exception: {e.Message}");
                             continue;
                         }
-                        crossRatePair.Market = marketName;
+                        crossRatePair.Market = market.MarketName;
                         try {
                             crossRatePair.PurchasePrice = (decimal)currenciesMatrixPurchaseMin[i, j];
                             crossRatePair.SellPrice = (decimal)currenciesMatrixSellMax[i, j];
                             if (crossRatePair.PurchasePrice > 0 && crossRatePair.SellPrice > 0) {
                                 crossRatePair.IsCross = true;
                                 crossRatePair.Spread = Math.Round((crossRatePair.SellPrice - crossRatePair.PurchasePrice) / crossRatePair.PurchasePrice * 100, 4);
-                                if (crossRatePair.Market == "Bittrex" && crossRatePair.PurchasePath.Split('-')[0] == "ETH") {
-                                    ShowRates(crossRatePair.PurchasePath.Split('-'), true, marketPairs);
-                                    ShowRates(crossRatePair.SellPath.Split('-'), false, marketPairs);
+                                if (crossRatePair.Market == "Bittrex" && crossRatePair.PurchasePath.Split('-')[0] == "ETH" && needToSaveInTimeService) {
+                                    ShowRates(crossRatePair.PurchasePath.Split('-'), true, market);
+                                    ShowRates(crossRatePair.SellPath.Split('-'), false, market);
 
                                     TimeService.AddCrossRateByMarketBittrex(crossRatePair);
                                 }
@@ -149,33 +136,33 @@ namespace CryptoAnalysatorWebApp.Models.AnalyzingAlgorithms {
             return GetPath(start, nextArray[start, curFinish], visited, nextArray, currencies, $"{currencies[nextArray[start, curFinish]]}-{result}");
         }
         
-        private static void ShowRates(string[] devidedPath, bool purchase, Dictionary<string, ExchangePair> marketPairs) {
+        private static void ShowRates(string[] devidedPath, bool purchase, BasicCryptoMarket market) {
             if (purchase) {
                 for (int i = 0; i < devidedPath.Length - 1; i++) {
                     purchase = true;
                     string pair = devidedPath[i] + '-' + devidedPath[i + 1];
-                    if (!marketPairs.ContainsKey(pair)) {
+                    if (!market.Pairs.ContainsKey(pair)) {
                         pair = devidedPath[i + 1] + '-' + devidedPath[i];
                         purchase = false;
                     }
 
                     Console.WriteLine(purchase
-                        ? $"{pair}  {marketPairs[pair].PurchasePrice}  Buy"
-                        : $"{pair}  {marketPairs[pair].SellPrice}  Sell");
+                        ? $"{pair}  {market.Pairs[pair].PurchasePrice}  Buy"
+                        : $"{pair}  {market.Pairs[pair].SellPrice}  Sell");
                 }
             } else {
                 Console.WriteLine("SellPathHere");
                 for (int i = devidedPath.Length - 1; i > 0; i--) {
                     purchase = false;
                     string pair = devidedPath[i - 1] + '-' + devidedPath[i];
-                    if (!marketPairs.ContainsKey(pair)) {
+                    if (!market.Pairs.ContainsKey(pair)) {
                         pair = devidedPath[i] + '-' + devidedPath[i - 1];
                         purchase = true; 
                     }
 
                     Console.WriteLine(purchase
-                        ? $"{pair}  {marketPairs[pair].PurchasePrice}  Buy"
-                        : $"{pair}  {marketPairs[pair].SellPrice}  Sell");
+                        ? $"{pair}  {market.Pairs[pair].PurchasePrice}  Buy"
+                        : $"{pair}  {market.Pairs[pair].SellPrice}  Sell");
                 }
                 Console.WriteLine("SellPathComleted");
             }

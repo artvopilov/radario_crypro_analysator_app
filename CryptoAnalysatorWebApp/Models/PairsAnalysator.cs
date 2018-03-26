@@ -65,8 +65,7 @@ namespace CryptoAnalysatorWebApp.Models
                     await market.LoadPairs();   
                 }
 
-                FloydWarshell.FindCrossesOnMarket(market.MarketName, market.Currencies, market.Pairs,
-                    _crossRatesByMarket, new Dictionary<string, int> { ["BTC"] = 0, ["ETH"] = 0 });
+                FloydWarshell.FindCrossesOnMarket(ref _crossRatesByMarket, new Dictionary<string, int> { ["BTC"] = 0, ["ETH"] = 0 }, market);
             }
         }
 

@@ -13,6 +13,8 @@ namespace CryptoAnalysatorWebApp.TelegramBot.Commands {
             const string respMessage = "Commands for trade bot on bittrex:\n" +
                                        "/createBot <apiKey> <apiSecret>\n" +
                                        "/trade bittrex btc:<amount> eth:<amount>\n" +
+                                       "/showOpenOrders\n" +
+                                       "/cancelOrder <uuid>\n" +
                                        "/deleteBot bittrex";
             client.SendTextMessageAsync(chatId, respMessage);
         }

@@ -17,23 +17,27 @@ namespace CryptoAnalysatorWebApp.TelegramBot.Commands {
 
             (string apiKey, string apiSecret) = GetAuthData(message, client, chatId);
             if (apiKey == "" || apiSecret == "") {
-                client.SendTextMessageAsync(chatId, "Error: apiKey or/and apiSecret were not provided");
-                //BittrexTradeBot bittrexTradeBot1 = new BittrexTradeBot();
-                //ManualResetEvent signal1 = new ManualResetEvent(false);
+                /*client.SendTextMessageAsync(chatId, "Error: apiKey or/and apiSecret were not provided");
+                return;*/
+            }
+
+            BittrexTradeBot bittrexTradeBot = new BittrexTradeBot();//apiKey, apiSecret);
+            ManualResetEvent signal = new ManualResetEvent(false);
+            
+            bool exists = TradeBotsStorage<ResponseWrapper>.Exists(chatId, "bittrex");
+            if (exists) {
+                client.SendTextMessageAsync(chatId, $"You already have bot on bittrex");
                 return;
             }
 
-            BittrexTradeBot bittrexTradeBot = new BittrexTradeBot(apiKey, apiSecret);
-            ManualResetEvent signal = new ManualResetEvent(false);// = new ManualResetEvent(false);
-            
             bool created = TradeBotsStorage<ResponseWrapper>.AddTradeBot(chatId, bittrexTradeBot, "bittrex", signal);
-            if (!created) {
-                client.SendTextMessageAsync(chatId, $"You already have bot on bittrex");
-            }
 
-            client.SendTextMessageAsync(chatId, $"Trade bot created on Bittrex. Your balances:\n" +
-                                                $"BTC: {bittrexTradeBot.BalanceBtc}\n" +
-                                                $"ETH: {bittrexTradeBot.BalanceEth}\n");
+            if (created) {
+                client.SendTextMessageAsync(chatId, $"Trade bot created on Bittrex. Your balances:\n" +
+                                                    $"{string.Join("; ", bittrexTradeBot.WalletBalances.Select(c => c.Key + ":" + c.Value).ToArray())}\n");
+            } else {
+                client.SendTextMessageAsync(chatId, "Error in creating TradeBot");
+            }
         }
 
         private (string, string) GetAuthData(Message message, TelegramBotClient client, long chatId) {

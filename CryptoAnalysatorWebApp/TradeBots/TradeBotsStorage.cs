@@ -47,7 +47,7 @@ namespace CryptoAnalysatorWebApp.TradeBots {
         public static bool Exists(long chatId, string market) {
             switch (market) {
                 case "bittrex":
-                    return _bittrexTradeBots.ContainsKey(chatId) ? true : false;
+                    return _bittrexTradeBots.ContainsKey(chatId);
             }
 
             return false;

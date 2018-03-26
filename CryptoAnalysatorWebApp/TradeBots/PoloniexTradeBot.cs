@@ -73,6 +73,10 @@ namespace CryptoAnalysatorWebApp.TradeBots {
             return responseAllPairs;
         }
 
+        public override Task<JObject> GetBalance(string currency) {
+            throw new NotImplementedException();
+        }
+
         public override async Task<JObject> GetOpenOrders(string pair = null) {
             JObject responseAllPairs = await ExecuteRequest("returnTicker", false);
             return responseAllPairs;
@@ -91,11 +95,6 @@ namespace CryptoAnalysatorWebApp.TradeBots {
         public override async Task<JObject> CancelOrder(string orderId) {
             JObject responseAllPairs = await ExecuteRequest("returnTicker", false);
             return responseAllPairs;
-        }
-
-        public override void StartTrading(TelegramBotClient client, long chatId, ManualResetEvent signal) {
-            Thread thread = new Thread(() => Trade(TradeAmountBtc, TradeAmountEth, client, chatId, signal));
-            thread.Start();
         }
 
         public override async void Trade(decimal amountBtc, decimal amountEth, TelegramBotClient client, long chatId, ManualResetEvent signal) {
