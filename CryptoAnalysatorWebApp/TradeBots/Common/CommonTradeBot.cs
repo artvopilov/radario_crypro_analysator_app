@@ -61,6 +61,7 @@ namespace CryptoAnalysatorWebApp.TradeBots.Common {
         
         public abstract Task<TResult> GetBalances();
         public abstract Task<TResult> GetBalance(string currency);
+        public abstract Task UpdateWalletBalances();
         public abstract Task<TResult> CreateBuyOrder(string pair, decimal quantity, decimal rate);
         public abstract Task<TResult> CreateSellORder(string pair, decimal quantity, decimal rate);
         public abstract Task<TResult> CancelOrder(string orderId);
@@ -68,7 +69,8 @@ namespace CryptoAnalysatorWebApp.TradeBots.Common {
         public abstract Task<TResult> GetOrderBook(string pair);
         public abstract Task<TResult> GetOpenOrders(string pair = null);    
         public abstract void Trade(decimal amountBtc, decimal amountEth, TelegramBotClient client, long chatId, ManualResetEvent signal);
-        public (decimal, decimal) StartTrading(decimal amountBtc, decimal amountEth, TelegramBotClient client, long chatId, ManualResetEvent signal) {
+        public async Task<(decimal, decimal)> StartTrading(decimal amountBtc, decimal amountEth, TelegramBotClient client, long chatId, ManualResetEvent signal) {
+            await UpdateWalletBalances();
             if (amountBtc > walletBalances["BTC"] || amountEth > walletBalances["ETH"]) {
                 return (0, 0);
             }
@@ -79,7 +81,12 @@ namespace CryptoAnalysatorWebApp.TradeBots.Common {
             Thread thread = new Thread(() => Trade(amountBtc, amountEth, client, chatId, signal));
             thread.Start();
             return (amountBtc, amountEth);
-        }    
+        }
+
+        public async Task<string> ShowBalances() {
+            await UpdateWalletBalances();
+            return $"{string.Join("; ", walletBalances.Select(c => c.Key + ":" + c.Value).ToArray())}";
+        }
 
         protected string MakeApiSignature(string completeUrl) {
             var hmac = new HMACSHA512(Encoding.UTF8.GetBytes(apiSecret));

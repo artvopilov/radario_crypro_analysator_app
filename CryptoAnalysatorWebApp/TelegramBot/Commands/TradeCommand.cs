@@ -14,7 +14,7 @@ namespace CryptoAnalysatorWebApp.TelegramBot.Commands {
     public class TradeCommand : CommonCommand {
         public override string Name { get; } = "trade";
 
-        public override void Execute(Message message, TelegramBotClient client, string channelId = null) {
+        public override async void Execute(Message message, TelegramBotClient client, string channelId = null) {
             var chatId = message.Chat.Id;
 
             (string market, decimal amountBtc, decimal amountEth) = GetTradeData(message);
@@ -33,7 +33,7 @@ namespace CryptoAnalysatorWebApp.TelegramBot.Commands {
             
             if (TradeBotsStorage<ResponseWrapper>.Exists(chatId, market)) {
                 (CommonTradeBot<ResponseWrapper> tradeBot, ManualResetEvent signal) = TradeBotsStorage<ResponseWrapper>.GetTardeBot(chatId, market);
-                (amountBtc, amountEth) = tradeBot.StartTrading(amountBtc, amountEth, client, chatId, signal);
+                (amountBtc, amountEth) = await tradeBot.StartTrading(amountBtc, amountEth, client, chatId, signal);
                 if (amountBtc == 0 && amountEth == 0) {
                     client.SendTextMessageAsync(chatId, string.Format("You don't have enough balance", market));
                     return;
@@ -52,7 +52,7 @@ namespace CryptoAnalysatorWebApp.TelegramBot.Commands {
 
             if (messageWords.Length == 3) {
                 string currency = messageWords[2].Split(':')[0].ToLower();
-                decimal currencyAmnt = decimal.TryParse(messageWords[2].Split(':')[1], out var amount) ? amount : 0;
+                decimal currencyAmnt = decimal.TryParse(messageWords[2].Split(':')[1].Replace('.', ','), out var amount) ? amount : 0;
                 
                 return (messageWords[1], currency == "btc" ? currencyAmnt : 0, currency == "eth" ? currencyAmnt : 0);
             } else {

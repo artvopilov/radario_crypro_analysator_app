@@ -6,7 +6,7 @@ using CryptoAnalysatorWebApp.Models.Common;
 
 namespace CryptoAnalysatorWebApp.Models.AnalyzingAlgorithms {
     public static class FloydWarshell {
-         public static void FindCrossesOnMarket(ref List<ExchangePair> crossRatesByMarket,
+        public static void FindCrossesOnMarket(ref List<ExchangePair> crossRatesByMarket,
              Dictionary<string, int> curStartChain, BasicCryptoMarket market, bool needToSaveInTimeService = true) {
              
             double[,] currenciesMatrixPurchaseMin = new double[market.Currencies.Count, market.Currencies.Count];
@@ -17,12 +17,17 @@ namespace CryptoAnalysatorWebApp.Models.AnalyzingAlgorithms {
 
             int[,] nextPurchase = new int[market.Currencies.Count, market.Currencies.Count];
             int[,] nextSell = new int[market.Currencies.Count, market.Currencies.Count];
+            int btcIndex = -1;
 
             for (int i = 0; i < market.Currencies.Count; i++) {
                 foreach (string cur in curStartChain.Keys.ToArray()) { 
                     if (market.Currencies[i] == cur) {
                         curStartChain[cur] = i;
                     }
+                }
+
+                if (market.Currencies[i] == "BTC") {
+                    btcIndex = i;
                 }
 
                 for (int j = 0; j < market.Currencies.Count; j++) {
@@ -86,7 +91,7 @@ namespace CryptoAnalysatorWebApp.Models.AnalyzingAlgorithms {
 
             for (int i = 0; i < market.Currencies.Count; i++) {
                 for (int j = 0; j < market.Currencies.Count; j++) {
-                    if (i != j && currenciesMatrixPurchaseMin[i, j] < currenciesMatrixSellMax[i, j] && curStartChain.Values.Contains(i)) {
+                    if (i != j && currenciesMatrixPurchaseMin[i, j] < currenciesMatrixSellMax[needToSaveInTimeService ? i : btcIndex, j] && curStartChain.Values.Contains(i)) {
                         ExchangePair crossRatePair = new ExchangePair();
                         try {
                             crossRatePair.PurchasePath = GetPath(i, j, new List<int>(), nextPurchase, market.Currencies, market.Currencies[j]);

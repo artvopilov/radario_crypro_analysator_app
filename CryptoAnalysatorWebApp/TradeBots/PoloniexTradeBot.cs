@@ -77,6 +77,10 @@ namespace CryptoAnalysatorWebApp.TradeBots {
             throw new NotImplementedException();
         }
 
+        public override Task UpdateWalletBalances() {
+            throw new NotImplementedException();
+        }
+
         public override async Task<JObject> GetOpenOrders(string pair = null) {
             JObject responseAllPairs = await ExecuteRequest("returnTicker", false);
             return responseAllPairs;

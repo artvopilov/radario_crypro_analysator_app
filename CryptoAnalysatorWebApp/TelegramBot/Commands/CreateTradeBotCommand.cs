@@ -12,16 +12,16 @@ namespace CryptoAnalysatorWebApp.TelegramBot.Commands {
     public class CreateTradeBotCommand : CommonCommand {
         public override string Name { get; } = "createBot";
 
-        public override void Execute(Message message, TelegramBotClient client, string channelId = null) {
+        public override async void Execute(Message message, TelegramBotClient client, string channelId = null) {
             var chatId = message.Chat.Id;
 
             (string apiKey, string apiSecret) = GetAuthData(message, client, chatId);
             if (apiKey == "" || apiSecret == "") {
-                /*client.SendTextMessageAsync(chatId, "Error: apiKey or/and apiSecret were not provided");
-                return;*/
+                client.SendTextMessageAsync(chatId, "Error: apiKey or/and apiSecret were not provided");
+                return;
             }
 
-            BittrexTradeBot bittrexTradeBot = new BittrexTradeBot();//apiKey, apiSecret);
+            BittrexTradeBot bittrexTradeBot = new BittrexTradeBot(apiKey, apiSecret);
             ManualResetEvent signal = new ManualResetEvent(false);
             
             bool exists = TradeBotsStorage<ResponseWrapper>.Exists(chatId, "bittrex");
@@ -33,8 +33,15 @@ namespace CryptoAnalysatorWebApp.TelegramBot.Commands {
             bool created = TradeBotsStorage<ResponseWrapper>.AddTradeBot(chatId, bittrexTradeBot, "bittrex", signal);
 
             if (created) {
-                client.SendTextMessageAsync(chatId, $"Trade bot created on Bittrex. Your balances:\n" +
-                                                    $"{string.Join("; ", bittrexTradeBot.WalletBalances.Select(c => c.Key + ":" + c.Value).ToArray())}\n");
+                try {
+                    await bittrexTradeBot.UpdateWalletBalances();
+                    client.SendTextMessageAsync(chatId, $"Trade bot created on Bittrex. Your balances:\n" +
+                                                        $"{await bittrexTradeBot.ShowBalances()}\n");
+                } catch (Exception e) {
+                    client.SendTextMessageAsync(chatId, "Error in creating TradeBot");
+                    TradeBotsStorage<ResponseWrapper>.DeleteTradeBot(chatId, "bittrex");
+                }
+                
             } else {
                 client.SendTextMessageAsync(chatId, "Error in creating TradeBot");
             }
