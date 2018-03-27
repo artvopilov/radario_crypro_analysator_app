@@ -212,6 +212,9 @@ namespace CryptoAnalysatorWebApp.TradeBots {
             bool canTradeWithBtc = amountBtc > 0 ? true : false;
             
             RestartTrading:
+            if (!TradeOn) {
+                return;
+            }
             if (!canTradeWithBtc && !canTradeWithEth) {
                 client.SendTextMessageAsync(chatId, "[Trading stopped]");
                 return;
@@ -241,21 +244,23 @@ namespace CryptoAnalysatorWebApp.TradeBots {
                 goto RestartTrading;
             }
             
-            allPairs.Clear();
             ResponseWrapper responseAllPairs = await GetAllPairs();
-            foreach (var pair in (JArray) responseAllPairs.Result) {
-                allPairs.Add((string) pair["MarketName"], new ExchangePair {    
-                    Pair = (string)pair["MarketName"],
-                    PurchasePrice = (decimal) pair["Ask"],
-                    SellPrice = (decimal) pair["Bid"]
+            lock (allPairs) {
+                allPairs.Clear();
+                foreach (var pair in (JArray) responseAllPairs.Result) {
+                    allPairs.Add((string) pair["MarketName"], new ExchangePair {    
+                        Pair = (string)pair["MarketName"],
+                        PurchasePrice = (decimal) pair["Ask"],
+                        SellPrice = (decimal) pair["Bid"]
+                    });
+                }
+
+                allPairs.Add("BTC-BTC", new ExchangePair {
+                    Pair = "BTC-BTC",
+                    PurchasePrice = 1,
+                    SellPrice = 1
                 });
             }
-
-            allPairs.Add("BTC-BTC", new ExchangePair {
-                Pair = "BTC-BTC",
-                PurchasePrice = 1,
-                SellPrice = 1
-            });
             
             fullTime.Stop();
             client.SendTextMessageAsync(chatId, $"[FOUND]: {crossBittrex.PurchasePath.Replace("-", "->")}   {crossBittrex.SellPath.Replace("-", "<-")}\n" +
@@ -274,18 +279,18 @@ namespace CryptoAnalysatorWebApp.TradeBots {
             (decimal minEqualToBtc, decimal resultDealF) =
                 await FindMinAmountForTrade(devidedPurchasePath, devidedSellPath, myAmount); 
             
-            /*if (minEqualToBtc < (decimal) 0.0005) {
+            if (minEqualToBtc < (decimal) 0.0005) {
                 await client.SendTextMessageAsync(chatId, $"[UNPROFITABLE:( ] amount in order: {minEqualToBtc} btc\n" +
                                                     $"Must be more than 0.0005 btc");
                 signal.Reset();
                 goto RestartTrading;
-            }*/
+            }
 
-            if (resultDealF <= 1) {
+            /*if (resultDealF <= 1) {
                 await client.SendTextMessageAsync(chatId, $"[UNPROFITABLE:( ] profit coefficient: {resultDealF}");
                 signal.Reset();
                 goto RestartTrading;
-            }
+            }*/
             canTradeWithEth = false;
             canTradeWithBtc = false;
 
@@ -364,8 +369,7 @@ namespace CryptoAnalysatorWebApp.TradeBots {
                 }
             }
             
-            //TradeBotsStorage<ResponseWrapper>.DeleteTradeBot(chatId, "bittrex");
-            client.SendTextMessageAsync(chatId, $"resultDealDone: {resultDealDone}");
+            client.SendTextMessageAsync(chatId, $"profit coefficient: {resultDealDone}");
             client.SendTextMessageAsync(chatId, "Bot on bittrex has done his job");
         }
 
@@ -683,7 +687,9 @@ namespace CryptoAnalysatorWebApp.TradeBots {
                     
                     var bestBuyRate = (decimal)sellOrders[0]["Rate"] * (1 + FeeBuy);
                     Console.WriteLine($"{pair}  {bestBuyRate}  Buy");
-                    allPairs[pair].PurchasePrice = (decimal)sellOrders[0]["Rate"];
+                    lock (allPairs) {
+                        allPairs[pair].PurchasePrice = (decimal)sellOrders[0]["Rate"];
+                    }
                     resultDeal /= bestBuyRate;
                 } else {
                     JArray buyOrders;
@@ -698,7 +704,9 @@ namespace CryptoAnalysatorWebApp.TradeBots {
                     
                     var bestSellRate = (decimal)buyOrders[0]["Rate"] * (1 - FeeSell);
                     Console.WriteLine($"{pair}  {bestSellRate}  Sell");
-                    allPairs[pair].SellPrice = (decimal)buyOrders[0]["Rate"];
+                    lock (allPairs) {
+                        allPairs[pair].SellPrice = (decimal)buyOrders[0]["Rate"];
+                    }
                     resultDeal *= bestSellRate;
                 }
                 

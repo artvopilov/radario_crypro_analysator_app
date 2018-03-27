@@ -32,6 +32,7 @@ namespace CryptoAnalysatorWebApp.TradeBots {
             switch (market) {
                 case "bittrex":
                     if (_bittrexTradeBots.ContainsKey(chatId)) {
+                        _bittrexTradeBots[chatId].TradeOn = false;
                         _bittrexTradeBots.Remove(chatId);
                         _bittrexTradeSignals.Remove(chatId);
                         return true;

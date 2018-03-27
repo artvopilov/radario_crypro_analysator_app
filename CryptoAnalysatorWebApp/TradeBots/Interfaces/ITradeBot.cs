@@ -16,7 +16,5 @@ namespace CryptoAnalysatorWebApp.TradeBots.Interfaces {
         Task<TResult> GetOpenOrders(string pair);
         (decimal, decimal) StartTrading(decimal amountBtc, decimal amountEth, TelegramBotClient client, long chatId, ManualResetEvent signal);
         void Trade(decimal amountBtc, decimal amountEth, TelegramBotClient client, long chatId, ManualResetEvent signal);
-        //Key:8a36bde72234442ca543f86696a1ecc1 
-        //Secret:ce4e67b6e9654e358c6da9677750d9e9
     }
 }

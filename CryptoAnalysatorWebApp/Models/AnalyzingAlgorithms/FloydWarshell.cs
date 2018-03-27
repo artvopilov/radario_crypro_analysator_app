@@ -102,7 +102,7 @@ namespace CryptoAnalysatorWebApp.Models.AnalyzingAlgorithms {
                             if (crossRatePair.PurchasePrice > 0 && crossRatePair.SellPrice > 0) {
                                 crossRatePair.IsCross = true;
                                 crossRatePair.Spread = Math.Round((crossRatePair.SellPrice - crossRatePair.PurchasePrice) / crossRatePair.PurchasePrice * 100, 4);
-                                if (crossRatePair.Market == "Bittrex" && crossRatePair.PurchasePath.Split('-')[0] == "ETH" && needToSaveInTimeService) {
+                                if (crossRatePair.Market == "Bittrex" && crossRatePair.PurchasePath.Split('-')[0] == "BTC" && needToSaveInTimeService) {
                                     ShowRates(crossRatePair.PurchasePath.Split('-'), true, market);
                                     ShowRates(crossRatePair.SellPath.Split('-'), false, market);
 

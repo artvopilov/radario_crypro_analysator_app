@@ -21,7 +21,7 @@ namespace CryptoAnalysatorWebApp.TelegramBot.Commands {
 
             bool deleted = TradeBotsStorage<ResponseWrapper>.DeleteTradeBot(chatId, "bittrex");
             if (deleted) {
-                client.SendTextMessageAsync(chatId, "Your trade bot on bittrex deleted");
+                client.SendTextMessageAsync(chatId, "[DELETION] Your trade bot on bittrex will be deleted after trades are stopped");
             } else {
                 client.SendTextMessageAsync(chatId, "You don't have trade bot on bittrex");
             }

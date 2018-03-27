@@ -25,6 +25,7 @@ namespace CryptoAnalysatorWebApp.TradeBots.Common {
         protected readonly Dictionary<string, ExchangePair> allPairs;
         protected Dictionary<string, decimal> walletBalances;
         protected List<Thread> tradeThreads;
+        public bool TradeOn = true;
 
         public decimal TradeAmountBtc { get; set; }
         public decimal TradeAmountEth { get; set; }
